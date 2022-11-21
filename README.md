@@ -160,18 +160,37 @@ RAM: 9688 ( 9.46 kB )
 
 &emsp;&emsp;以下是移植的基本步骤
 #### （一）bootloader 部分
+建议参考 `example` 中的案例进行移植。
 1.  创建一个代码工程，并确保这个工程可以正常运行。（如：控制一个 LED 闪烁）
 2.  将 `source` 目录下的文件放到工程目录下，可随意放置和命名。
 3.  将 `source` 目录下的文件按需添加进代码工程中（`source/component` 目录下的组件库非移植的必选项），并包含对应的头文件目录。
-4.  实现 `data_transfer_port` 和 `fal_stm32f1_flash` 内的函数，若与案例一致，则无需修改。
+4.  实现 `data_transfer_port.c` 和 `fal_stm32f1_flash.c` 内的函数，若与案例一致，则无需修改。
 5.  若使用了自定义的通讯协议，则修改 `protocol_parser.c` 和 `protocol_parser.h` ，若与案例一致，则无需修改。
 6.  将 `app.c` 文件内的函数移植进你的应用代码，记得包含 `app.h` ，必要时可修改。
 7.  尝试编译并解决编译器报错的问题。（若提示缺失部分文件，可在 `example` 目录中寻找并添加进工程，后续再行修改也是可以的 ）
 8.  按需求设置好 `user_config.h` 文件，请仔细阅读说明。
 9.  查看 `app_config.h` 是否有需要修改的配置项。
-10.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），且标志位放置在 RAM ，则需要配置标志位（ update_flag ）所在的 RAM 地址，并且配置 IDE 或分散加载文件不对其进行初始化。 IDE 配置的方式参考如下图所示。
+10.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），且标志位放置在 RAM ，则需要配置标志位 `update_flag` 所在的 RAM 地址，并且配置 IDE 或分散加载文件不对其进行初始化。 IDE 配置的方式参考如下图所示。（ 需包含 `common.h` ）
 其中，宏 `FIRMWARE_UPDATE_VAR_ADDR` 在 `user_config.h` 中配置，本案例是 `0x20000000` 。注意，提供给 `update_flag` 的 RAM 区域一定要勾选 `NoInit` 。
-![update_flag](image/update_flag.png)
+
+```
+/* 固件更新的标志位，该标志位不能被清零 */
+#if (USING_IS_NEED_UPDATE_PROJECT == USING_APP_SET_FLAG_UPDATE)
+    #if defined(__IS_COMPILER_ARM_COMPILER_5__)
+    uint64_t update_flag __attribute__((at(FIRMWARE_UPDATE_VAR_ADDR), zero_init));
+
+    #elif defined(__IS_COMPILER_ARM_COMPILER_6__)
+        #define __INT_TO_STR(x)     #x
+        #define INT_TO_STR(x)       __INT_TO_STR(x)
+        volatile uint64_t update_flag __attribute__((section(".bss.ARM.__at_" INT_TO_STR(FIRMWARE_UPDATE_VAR_ADDR))));
+
+    #else
+        #error "variable placement not supported for this compiler."
+    #endif
+#endif
+```
+
+![update_flag的定义](image/update_flag%E7%9A%84%E5%AE%9A%E4%B9%89.png)
 ![IDE配置RAM](image/IDE%E9%85%8D%E7%BD%AERAM.png)
 11.  工程配置建议选择 AC6 （虽然本组件也支持 AC5 ，除非不得已，否则建议使用 AC6），选择 C99 ，优化根据需要选择即可，建议按下图所示配置。
 ![AC6的C/C++配置](image/AC6%E7%9A%84C/C++%E9%85%8D%E7%BD%AE.png)
@@ -180,17 +199,43 @@ RAM: 9688 ( 9.46 kB )
 ![bootloader的map](image/bootloader%E7%9A%84map.png)
 
 #### （二）APP 部分
-APP 部分的移植相对简单。
+APP 部分的移植相对简单，可直接参考 `example` 中的案例。
 1.  创建一个代码工程，并确保这个工程可以正常运行。（如：控制一个 LED 闪烁）
-2.  确定 APP 在 flash 中的地址，需考虑 bootloader 的大小（不能和 bootloader 有冲突），中断向量表对地址的要求（如必须是 0x200 的整数倍）， flash 的擦除粒度（因 flash 擦除时是以扇区为单位的）。需要注意的是， APP 的地址一定要和 bootloader 的 `user_config.h` 中配置的一致，否则无法运行。
+2.  确定 APP 在 flash 中的地址，需考虑 bootloader 的大小（不能和 bootloader 有冲突），中断向量表对地址的要求（如必须是 0x200 的整数倍）， flash 的擦除粒度（因 flash 擦除时是以扇区为单位的）。 **需要注意的是， APP 的地址一定要和 bootloader 的 `user_config.h` 中配置的一致，否则无法运行。** 
 3.  在外设初始化前修改中断向量表， keil 可采用下图的方式修改，一劳永逸。
+
+```
+/* 设置中断向量表后，开启总中断 */
+extern int Image$$ER_IROM1$$Base;
+BSP_INT_DIS();
+SCB->VTOR = (uint32_t)&Image$$ER_IROM1$$Base;
+BSP_INT_EN();
+```
+
 ![设置中断向量表](image/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E6%96%AD%E5%90%91%E9%87%8F%E8%A1%A8.png)
 ![IDE设置ROM地址](image/IDE%E8%AE%BE%E7%BD%AEROM%E5%9C%B0%E5%9D%80.png)
-4.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），且标志位放置在 RAM ，则需要增加一个标志位变量，需配置标志位（ update_flag ）所在的 RAM 地址。 IDE 配置的方式参考如下图所示。
+4.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），且标志位放置在 RAM ，则需要增加一个标志位变量，需配置标志位 `update_flag` 所在的 RAM 地址。 IDE 配置的方式参考如下图所示。（ 需包含 `common.h` ）
 其中，宏 `FIRMWARE_UPDATE_VAR_ADDR` 在 `user_config.h` 中配置，本案例是 `0x20000000` 。和 bootloader 的操作不同， APP 的 `update_flag` 无须设置为 `NoInit` 。 **需要注意的是， `FIRMWARE_UPDATE_VAR_ADDR` 的值要和 bootloader 中的配置保持一致。** 
-![update_flag](image/update_flag.png)
+```
+/* 固件更新的标志位，该标志位不能被清零 */
+#if (USING_IS_NEED_UPDATE_PROJECT == USING_APP_SET_FLAG_UPDATE)
+    #if defined(__IS_COMPILER_ARM_COMPILER_5__)
+    uint64_t update_flag __attribute__((at(FIRMWARE_UPDATE_VAR_ADDR), zero_init));
+
+    #elif defined(__IS_COMPILER_ARM_COMPILER_6__)
+        #define __INT_TO_STR(x)     #x
+        #define INT_TO_STR(x)       __INT_TO_STR(x)
+        volatile uint64_t update_flag __attribute__((section(".bss.ARM.__at_" INT_TO_STR(FIRMWARE_UPDATE_VAR_ADDR))));
+
+    #else
+        #error "variable placement not supported for this compiler."
+    #endif
+#endif
+```
+
+![update_flag的定义](image/update_flag%E7%9A%84%E5%AE%9A%E4%B9%89.png)
 5.  增加固件更新时进入 bootloader 的代码，如上位机发送固件更新的指令。（测试时可通过按键模拟上位机发送固件更新）
-6.  在执行固件更新的指令的代码处，添加设置 `update_flag ` 标志位的值和系统复位的代码，如下图所示。其中， `FIRMWARE_UPDATE_MAGIC_WORD` 的值是 `0xA5A5A5A5` ，注意此值要和 bootloader 保持一致 。  
+6.  在执行固件更新的指令的代码处，添加设置 `update_flag ` 标志位的值和系统复位的代码，如下图所示。其中， `FIRMWARE_UPDATE_MAGIC_WORD` 的值是 `0xA5A5A5A5` ， **注意此值要和 bootloader 保持一致 。**   
 若需要通过标志位使用“恢复出厂固件”的功能，也是同理，对应的宏则是 `FIRMWARE_RECOVERY_MAGIC_WORD ` ，值为 `0x5A5A5A5A` 。
 ```
 update_flag = FIRMWARE_UPDATE_MAGIC_WORD;
