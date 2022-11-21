@@ -191,12 +191,14 @@ RAM: 9688 ( 9.46 kB )
 ```
 
 ![update_flag的定义](image/update_flag%E7%9A%84%E5%AE%9A%E4%B9%89.png)
-![IDE配置RAM](image/IDE%E9%85%8D%E7%BD%AERAM.png)
+![IDE配置RAM](image/IDE%E9%85%8D%E7%BD%AERAM.png)  
+
 11.  工程配置建议选择 AC6 （虽然本组件也支持 AC5 ，除非不得已，否则建议使用 AC6），选择 C99 ，优化根据需要选择即可，建议按下图所示配置。
-![AC6的C/C++配置](image/AC6%E7%9A%84C/C++%E9%85%8D%E7%BD%AE.png)
+![AC6的C/C++配置](image/AC6%E7%9A%84C/C++%E9%85%8D%E7%BD%AE.png)  
+
 12.  尝试再次编译并解决编译器提示的问题。
 13.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），编译通过后，查看 map 文件是否新增了一个 Region ，并且地址正确， `Type` 为 `Zero` ，该区域为 `UNINIT` ，若全部符合，则移植成功。
-![bootloader的map](image/bootloader%E7%9A%84map.png)
+![bootloader的map](image/bootloader%E7%9A%84map.png)  
 
 #### （二）APP 部分
 APP 部分的移植相对简单，可直接参考 `example` 中的案例。
@@ -213,27 +215,10 @@ BSP_INT_EN();
 ```
 
 ![设置中断向量表](image/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E6%96%AD%E5%90%91%E9%87%8F%E8%A1%A8.png)
-![IDE设置ROM地址](image/IDE%E8%AE%BE%E7%BD%AEROM%E5%9C%B0%E5%9D%80.png)
-4.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），且标志位放置在 RAM ，则需要增加一个标志位变量，需配置标志位 `update_flag` 所在的 RAM 地址。 IDE 配置的方式参考如下图所示。（ 需包含 `common.h` ）
-其中，宏 `FIRMWARE_UPDATE_VAR_ADDR` 在 `user_config.h` 中配置，本案例是 `0x20000000` 。和 bootloader 的操作不同， APP 的 `update_flag` 无须设置为 `NoInit` 。 **需要注意的是， `FIRMWARE_UPDATE_VAR_ADDR` 的值要和 bootloader 中的配置保持一致。** 
-```
-/* 固件更新的标志位，该标志位不能被清零 */
-#if (USING_IS_NEED_UPDATE_PROJECT == USING_APP_SET_FLAG_UPDATE)
-    #if defined(__IS_COMPILER_ARM_COMPILER_5__)
-    uint64_t update_flag __attribute__((at(FIRMWARE_UPDATE_VAR_ADDR), zero_init));
+![IDE设置ROM地址](image/IDE%E8%AE%BE%E7%BD%AEROM%E5%9C%B0%E5%9D%80.png)  
 
-    #elif defined(__IS_COMPILER_ARM_COMPILER_6__)
-        #define __INT_TO_STR(x)     #x
-        #define INT_TO_STR(x)       __INT_TO_STR(x)
-        volatile uint64_t update_flag __attribute__((section(".bss.ARM.__at_" INT_TO_STR(FIRMWARE_UPDATE_VAR_ADDR))));
+4.  同 bootloader 部分的步骤 10 一致。
 
-    #else
-        #error "variable placement not supported for this compiler."
-    #endif
-#endif
-```
-
-![update_flag的定义](image/update_flag%E7%9A%84%E5%AE%9A%E4%B9%89.png)
 5.  增加固件更新时进入 bootloader 的代码，如上位机发送固件更新的指令。（测试时可通过按键模拟上位机发送固件更新）
 6.  在执行固件更新的指令的代码处，添加设置 `update_flag ` 标志位的值和系统复位的代码，如下图所示。其中， `FIRMWARE_UPDATE_MAGIC_WORD` 的值是 `0xA5A5A5A5` ， **注意此值要和 bootloader 保持一致 。**   
 若需要通过标志位使用“恢复出厂固件”的功能，也是同理，对应的宏则是 `FIRMWARE_RECOVERY_MAGIC_WORD ` ，值为 `0x5A5A5A5A` 。
@@ -242,8 +227,7 @@ update_flag = FIRMWARE_UPDATE_MAGIC_WORD;
 HAL_NVIC_SystemReset();
 ```
 7.  尝试再次编译并解决编译器提示的问题。
-8.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），编译通过后，查看 map 文件是否新增了一个 `.ARM.__at_0x20000000` 的 Section ，若地址和大小正确，则移植成功。
-![app的map](image/app%E7%9A%84map.png)
+8.  同 bootloader 部分的步骤 13 一致。
 
 &emsp;
 
