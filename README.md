@@ -83,7 +83,7 @@
 
 ---
 ### 五、固件更新流程
-&emsp;&emsp;根据配置的分区方案不同，固件的更新流程会有些不同，此处仅展示简要的更新流程，更详细的内容，请阅读[《bootloader程序设计思路》](https://gitee.com/DinoHaw/mOTA/blob/master/document/bootloader%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF.pdf)文档和源代码。 
+&emsp;&emsp;根据配置的分区方案不同，固件的更新流程会有些不同，此处仅展示简要的更新流程，便于快速理解固件更新的流程，因此屏蔽了很多细节，更详细的内容，请阅读[《bootloader程序设计思路》](https://gitee.com/DinoHaw/mOTA/blob/master/document/bootloader%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF.pdf)文档和源代码。 
   
 &emsp;&emsp;本组件的目的是最大程序的减少 APP 的改动量以实现 OTA 的功能，从下图可知， bootloader 便完成了固件的下载、存放、校验、解密、更新等所有操作， APP 部分所需要做的有以下三件事。
 1.  根据 bootloader 占用的大小和 flash 的最小擦除单位，重新设置 APP 的起始位置和中断向量表。
@@ -91,13 +91,13 @@
 3.  设置一个更新标志位，且这个标志位在 APP 软复位进入 bootloader 时仍能被读取到。（当固件更新的方式为上位机指令控制时，可以不执行此步骤）
 
 &emsp;&emsp; **一般来说，通知 bootloader 需要进行固件更新的方式有以下两种：** 
-1.  采用上位机指令控制的方式，优点是 APP 无须设置更新标志位，即便设备在收到更新指令后断电，也可以照常更新。缺点是设备在上电后， bootloader 需要等待几秒的时间，以确认是否有来自上位机的更新指令，从而决定进入固件更新模式亦或跳转至 APP 。 
+1.  采用上位机指令控制的方式，优点是 APP 无须设置更新标志位，即便设备在收到更新指令后断电，也可以照常更新。缺点是设备在上电后， bootloader 需要等待几秒的时间（时间长短由通讯协议和上位机决定），以确认是否有来自上位机的更新指令，从而决定进入固件更新模式亦或跳转至 APP 。 
 
-2.  APP 在软复位进入 bootloader 之前设置一个特殊的标志位，可以放置在 RAM 或者外部的非易失性存储介质中（如：EEPROM）。此方式的优点是设备上电时 bootloader 无须等待和验证是否有固件更新的指令，通过标志位便可决定是否进入固件更新模式亦或跳转至 APP ，缺点则是 APP 和 bootloader 都要记录标志位所在的地址空间，且该地址空间不能被挪作他用，更不能被意外修改。若使用的是 RAM 作为记录标志位的介质，则还有断电后更新标志信息丢失的问题。
+2.  APP 在软复位进入 bootloader 之前设置一个特殊的标志位，可以放置在 RAM 、备份寄存器或者外部的非易失性存储介质中（如：EEPROM）。此方式的优点是设备上电时 bootloader 无须等待和验证是否有固件更新的指令，通过标志位便可决定是否进入固件更新模式亦或跳转至 APP ，且利用再入 bootloader 的机制，可以给 APP 提供一个干净的外设环境。缺点则是 APP 和 bootloader 都要记录标志位所在的地址空间，且该地址空间不能被挪作他用，不能被意外修改，更不能被编译器初始化。相较于上个方案多了要专门指定该变量的地址并且不被初始化的步骤。若使用的是 RAM 作为记录标志位的介质，则还有断电后更新标志信息丢失的问题。
 
-&emsp;&emsp; **综上所述，没有完美的方案，根据实际需求进行选择和取舍即可。** 
+&emsp;&emsp; **综上所述，没有完美的方案。本组件支持上述方案二选一，根据实际需求进行选择和取舍即可。** 
 
-> 由于案例采用了 YModem-1K 协议，而本组件开始固件更新的方式是通过上位机发送指令开始的，因此测试时若设备正在运行 APP ，需要有个软复位进入 bootloader 的条件，为了便于展示，案例使用了板卡上的功能按键作为触发条件，模拟上位机向设备发送了更新指令。
+> 由于案例采用了 YModem-1K 协议，而本组件开始固件更新的方式是通过上位机发送指令开始的，因此测试时若设备正在运行 APP ，需要有个进入 bootloader 的条件，为了便于展示，案例使用了板卡上的功能按键作为触发条件，模拟上位机向设备发送了更新指令，详见案例的使用说明。
    
 ![固件更新流程图](image/%E5%9B%BA%E4%BB%B6%E6%9B%B4%E6%96%B0%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
 
@@ -151,12 +151,54 @@ RAM: 9688 ( 9.46 kB )
 
 ---
 ### 九、移植说明
-&emsp;&emsp;由于写教程工作量较大，本开源工程暂不提供移植说明文档。代码已分层设计，具备一定的移植性，有经验的工程师看 `example` 中的示例代码基本都能自行移植到别的芯片平台。这里仅做几点说明。
+&emsp;&emsp;由于写教程工作量较大，本开源工程暂不提供详细的移植说明文档。代码已分层设计，具备一定的移植性，有经验的工程师看 `example` 中的示例代码和本说明基本都能自行移植到别的芯片平台。这里仅做几点说明。
 1.  bootloader 部分的核心代码都在 `source` 目录下，是移植的必需文件。
 2.  `source/component` 目录下的组件库非移植的必选项，根据功能需要进行裁剪。
 3.  因固件包含表头，固件写入的 flash 分区的方式与通讯协议是强相关的。若自定义的协议支持可变长度，那么建议传输第一个分包时就是固件表头的大小（标准表头大小是 96 byte ，本工程因采用 YModem-1K 协议，[固件打包器](https://gitee.com/DinoHaw/mOTA/tools/Firmware_Packager(YModem))将表头扩大到了 1 Kbyte，自行修改即可），从而方便 bootloader 解包。
 4.  除开表头部分，固件的每个切包不能超过 4096 byte ，且 4096 除以每个切包大小后必须是整数（如常见的128、256、512、1024、2048等），否则就得修改源码。
 5.  单分区方案虽然节省了 flash 空间，但本组件的很多功能和安全特性都无法使用，除非 flash 实在受限，否则建议至少使用双分区的方案。
+
+&emsp;&emsp;以下是移植的基本步骤
+#### （一）bootloader 部分
+1.  创建一个代码工程，并确保这个工程可以正常运行。（如：控制一个 LED 闪烁）
+2.  将 `source` 目录下的文件放到工程目录下，可随意放置和命名。
+3.  将 `source` 目录下的文件按需添加进代码工程中（`source/component` 目录下的组件库非移植的必选项），并包含对应的头文件目录。
+4.  实现 `data_transfer_port` 和 `fal_stm32f1_flash` 内的函数，若与案例一致，则无需修改。
+5.  若使用了自定义的通讯协议，则修改 `protocol_parser.c` 和 `protocol_parser.h` ，若与案例一致，则无需修改。
+6.  将 `app.c` 文件内的函数移植进你的应用代码，记得包含 `app.h` ，必要时可修改。
+7.  尝试编译并解决编译器报错的问题。（若提示缺失部分文件，可在 `example` 目录中寻找并添加进工程，后续再行修改也是可以的 ）
+8.  按需求设置好 `user_config.h` 文件，请仔细阅读说明。
+9.  查看 `app_config.h` 是否有需要修改的配置项。
+10.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），且标志位放置在 RAM ，则需要配置标志位（ update_flag ）所在的 RAM 地址，并且配置 IDE 或分散加载文件不对其进行初始化。 IDE 配置的方式参考如下图所示。
+其中，宏 `FIRMWARE_UPDATE_VAR_ADDR` 在 `user_config.h` 中配置，本案例是 `0x20000000` 。注意，提供给 `update_flag` 的 RAM 区域一定要勾选 `NoInit` 。
+![update_flag](image/update_flag.png)
+![IDE配置RAM](image/IDE%E9%85%8D%E7%BD%AERAM.png)
+11.  工程配置建议选择 AC6 （虽然本组件也支持 AC5 ，除非不得已，否则建议使用 AC6），选择 C99 ，优化根据需要选择即可，建议按下图所示配置。
+![AC6的C/C++配置](image/AC6%E7%9A%84C/C++%E9%85%8D%E7%BD%AE.png)
+12.  尝试再次编译并解决编译器提示的问题。
+13.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），编译通过后，查看 map 文件是否新增了一个 Region ，并且地址正确， `Type` 为 `Zero` ，该区域为 `UNINIT` ，若全部符合，则移植成功。
+![bootloader的map](image/bootloader%E7%9A%84map.png)
+
+#### （二）APP 部分
+APP 部分的移植相对简单。
+1.  创建一个代码工程，并确保这个工程可以正常运行。（如：控制一个 LED 闪烁）
+2.  确定 APP 在 flash 中的地址，需考虑 bootloader 的大小（不能和 bootloader 有冲突），中断向量表对地址的要求（如必须是 0x200 的整数倍）， flash 的擦除粒度（因 flash 擦除时是以扇区为单位的）。需要注意的是， APP 的地址一定要和 bootloader 的 `user_config.h` 中配置的一致，否则无法运行。
+3.  在外设初始化前修改中断向量表， keil 可采用下图的方式修改，一劳永逸。
+![设置中断向量表](image/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E6%96%AD%E5%90%91%E9%87%8F%E8%A1%A8.png)
+![IDE设置ROM地址](image/IDE%E8%AE%BE%E7%BD%AEROM%E5%9C%B0%E5%9D%80.png)
+4.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），且标志位放置在 RAM ，则需要增加一个标志位变量，需配置标志位（ update_flag ）所在的 RAM 地址。 IDE 配置的方式参考如下图所示。
+其中，宏 `FIRMWARE_UPDATE_VAR_ADDR` 在 `user_config.h` 中配置，本案例是 `0x20000000` 。和 bootloader 的操作不同， APP 的 `update_flag` 无须设置为 `NoInit` 。 **需要注意的是， `FIRMWARE_UPDATE_VAR_ADDR` 的值要和 bootloader 中的配置保持一致。** 
+![update_flag](image/update_flag.png)
+5.  增加固件更新时进入 bootloader 的代码，如上位机发送固件更新的指令。（测试时可通过按键模拟上位机发送固件更新）
+6.  在执行固件更新的指令的代码处，添加设置 `update_flag ` 标志位的值和系统复位的代码，如下图所示。其中， `FIRMWARE_UPDATE_MAGIC_WORD` 的值是 `0xA5A5A5A5` ，注意此值要和 bootloader 保持一致 。  
+若需要通过标志位使用“恢复出厂固件”的功能，也是同理，对应的宏则是 `FIRMWARE_RECOVERY_MAGIC_WORD ` ，值为 `0x5A5A5A5A` 。
+```
+update_flag = FIRMWARE_UPDATE_MAGIC_WORD;
+HAL_NVIC_SystemReset();
+```
+7.  尝试再次编译并解决编译器提示的问题。
+8.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），编译通过后，查看 map 文件是否新增了一个 `.ARM.__at_0x20000000` 的 Section ，若地址和大小正确，则移植成功。
+![app的map](image/app%E7%9A%84map.png)
 
 &emsp;
 
