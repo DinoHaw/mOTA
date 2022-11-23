@@ -1,0 +1,1583 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>695</width>
+    <height>745</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>999999</width>
+    <height>999999</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resource.qrc">
+    <normaloff>:/icon/images/icon.png</normaloff>:/icon/images/icon.png</iconset>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_10">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabFirmwarePackage">
+      <attribute name="title">
+       <string>固件打包</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_9">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>112</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>1（选择需要打包的固件）</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="1" column="2">
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Maximum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>固件名：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pbChooseFw">
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>35</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>1.选择固件</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>路径：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1" colspan="4">
+             <widget class="QLineEdit" name="leOpenFwPath">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="leOpenFwName">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>112</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>2（打包后的固件保存路径）</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="1" colspan="4">
+             <widget class="QLineEdit" name="leSaveFwPath">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pbSaveFw">
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>35</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>2.保存路径</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_3">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>固件名：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Maximum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>路径：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="leSaveFwName">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>187</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>3（可选）</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout_6">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>加密算法：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="combEncrypt">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>不加密</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>AES256</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>加密密钥：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="leKey">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>输入32位的密钥</string>
+              </property>
+              <property name="text">
+               <string>0123456789ABCDEF0123456789ABCDEF</string>
+              </property>
+              <property name="maxLength">
+               <number>32</number>
+              </property>
+              <property name="echoMode">
+               <enum>QLineEdit::Normal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QComboBox" name="combKeyFormat">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>暂不实现</string>
+              </property>
+              <item>
+               <property name="text">
+                <string>ASCII</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>HEX</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>加密   IV：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="leIV">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>输入16位的IV</string>
+              </property>
+              <property name="inputMethodHints">
+               <set>Qt::ImhNone</set>
+              </property>
+              <property name="inputMask">
+               <string/>
+              </property>
+              <property name="text">
+               <string>0123456789ABCDEF</string>
+              </property>
+              <property name="maxLength">
+               <number>16</number>
+              </property>
+              <property name="echoMode">
+               <enum>QLineEdit::Normal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QComboBox" name="combIvFormat">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>暂不实现</string>
+              </property>
+              <item>
+               <property name="text">
+                <string>ASCII</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>HEX</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>字符水印：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="leUserString">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
+              <property name="toolTip">
+               <string>最长可输入16个字符，暂不支持中文</string>
+              </property>
+              <property name="text">
+               <string>ChinaDino</string>
+              </property>
+              <property name="maxLength">
+               <number>16</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>73</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>4</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_23">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>固件版本：</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="combPartName">
+              <property name="minimumSize">
+               <size>
+                <width>85</width>
+                <height>30</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>app</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>download</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>factory</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="minimumSize">
+               <size>
+                <width>110</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>130</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>存放固件的分区名：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="6">
+             <widget class="QSpinBox" name="sbVer3">
+              <property name="minimumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximum">
+               <number>255</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <widget class="QSpinBox" name="sbVer2">
+              <property name="minimumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximum">
+               <number>255</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="7">
+             <widget class="QSpinBox" name="sbVer4">
+              <property name="minimumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximum">
+               <number>255</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QSpinBox" name="sbVer1">
+              <property name="minimumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>51</width>
+                <height>25</height>
+               </size>
+              </property>
+              <property name="maximum">
+               <number>255</number>
+              </property>
+              <property name="value">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>5</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SetFixedSize</enum>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_12">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>打包结果：</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labPkgResult">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>200</height>
+               </size>
+              </property>
+              <property name="palette">
+               <palette>
+                <active>
+                 <colorrole role="WindowText">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>0</red>
+                    <green>170</green>
+                    <blue>0</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </active>
+                <inactive>
+                 <colorrole role="WindowText">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>0</red>
+                    <green>170</green>
+                    <blue>0</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </inactive>
+                <disabled>
+                 <colorrole role="WindowText">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>120</red>
+                    <green>120</green>
+                    <blue>120</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </disabled>
+               </palette>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>18</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>打包成功</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Minimum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>192</width>
+                <height>29</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pbStartPkg">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>170</width>
+                <height>60</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>开始打包</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabPackageParser">
+      <attribute name="title">
+       <string>固件包解析</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_24">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>112</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>选择需解析的fpk固件包</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout_12">
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>固件名：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1" colspan="4">
+             <widget class="QLineEdit" name="leOpenPkgPath">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pbChoosePkg">
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>35</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>选择固件包</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="leOpenPkgName">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Maximum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>路径：</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QTableWidget" name="twFirmwareInfo">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::DefaultContextMenu</enum>
+         </property>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <column>
+          <property name="text">
+           <string>参数</string>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>值</string>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
+         </column>
+         <item row="0" column="0">
+          <property name="text">
+           <string>固件版本类型</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="0" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="1" column="0">
+          <property name="text">
+           <string>旧固件版本</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="1" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="2" column="0">
+          <property name="text">
+           <string>新固件版本</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="3" column="0">
+          <property name="text">
+           <string>字符水印</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="3" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="4" column="0">
+          <property name="text">
+           <string>固件存放的分区名</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="4" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="5" column="0">
+          <property name="text">
+           <string>加密算法</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="5" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="6" column="0">
+          <property name="text">
+           <string>源固件大小</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="6" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="7" column="0">
+          <property name="text">
+           <string>打包后固件大小</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="7" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="8" column="0">
+          <property name="text">
+           <string>文件大小（含表头）</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="8" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="9" column="0">
+          <property name="text">
+           <string>固件打包时间</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+         </item>
+         <item row="10" column="0">
+          <property name="text">
+           <string>源固件的CRC32</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="10" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="11" column="0">
+          <property name="text">
+           <string>打包后的CRC32</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="11" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="12" column="0">
+          <property name="text">
+           <string>表头的CRC32</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+         <item row="12" column="1">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="flags">
+           <set>ItemIsSelectable|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_15">
+       <property name="maximumSize">
+        <size>
+         <width>350</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="palette">
+        <palette>
+         <active>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>129</red>
+             <green>129</green>
+             <blue>129</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </active>
+         <inactive>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>129</red>
+             <green>129</green>
+             <blue>129</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </inactive>
+         <disabled>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>120</red>
+             <green>120</green>
+             <blue>120</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </disabled>
+        </palette>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Design by Dino 2022</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_16">
+       <property name="maximumSize">
+        <size>
+         <width>200</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="palette">
+        <palette>
+         <active>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>140</red>
+             <green>140</green>
+             <blue>140</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </active>
+         <inactive>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>140</red>
+             <green>140</green>
+             <blue>140</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </inactive>
+         <disabled>
+          <colorrole role="WindowText">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>120</red>
+             <green>120</green>
+             <blue>120</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </disabled>
+        </palette>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>V1.0.0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>
