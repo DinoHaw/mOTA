@@ -177,7 +177,7 @@ RAM: 9688 ( 9.46 kB )
 /* 固件更新的标志位，该标志位不能被清零 */
 #if (USING_IS_NEED_UPDATE_PROJECT == USING_APP_SET_FLAG_UPDATE)
     #if defined(__IS_COMPILER_ARM_COMPILER_5__)
-    uint64_t update_flag __attribute__((at(FIRMWARE_UPDATE_VAR_ADDR), zero_init));
+    volatile uint64_t update_flag __attribute__((at(FIRMWARE_UPDATE_VAR_ADDR), zero_init));
 
     #elif defined(__IS_COMPILER_ARM_COMPILER_6__)
         #define __INT_TO_STR(x)     #x
@@ -194,7 +194,7 @@ RAM: 9688 ( 9.46 kB )
 ![IDE配置RAM](image/IDE%E9%85%8D%E7%BD%AERAM.png)  
 
 11.  工程配置建议选择 AC6 （虽然本组件也支持 AC5 ，除非不得已，否则建议使用 AC6），选择 C99 ，优化根据需要选择即可，建议按下图所示配置。
-![AC6的C/C++配置](image/AC6%E7%9A%84C/C++%E9%85%8D%E7%BD%AE.png)  
+![AC6的配置](image/AC6%E7%9A%84%E9%85%8D%E7%BD%AE.png)
 
 12.  尝试再次编译并解决编译器提示的问题。
 13.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），编译通过后，查看 map 文件是否新增了一个 Region ，并且地址正确， `Type` 为 `Zero` ，该区域为 `UNINIT` ，若全部符合，则移植成功。
