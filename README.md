@@ -2,7 +2,7 @@
 # mOTA
 
 ### 一、简介
-&emsp;&emsp;本开源工程是一款专为 32 位 MCU 开发的 OTA 组件，组件包含了 **[bootloader](https://gitee.com/DinoHaw/mOTA/source)** **、固件打包器** **([Firmware_Packager](https://gitee.com/DinoHaw/mOTA/tools/Firmware_Packager(YModem)))** **、固件发送器** 三部分，并提供了一个基于 STM32F103 和 YModem-1K 协议的案例，因此本案例的固件发送器名为 **[YModem_Sender](https://gitee.com/DinoHaw/mOTA/tools/YModem_Sender)** 。
+&emsp;&emsp;本开源工程是一款专为 32 位 MCU 开发的 OTA 组件，组件包含了 **[bootloader](https://gitee.com/DinoHaw/mOTA/source)** **、固件打包器** **([Firmware_Packager](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem)))** **、固件发送器** 三部分，并提供了一个基于 STM32F103 和 YModem-1K 协议的案例，因此本案例的固件发送器名为 **[YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender)** 。
 
 &emsp;&emsp;mOTA 中的 m 可意为 mini 、 micro 、 MCU ( Microcontroller Unit )，而 OTA ( Over-the-Air Technology )，即空中下载技术，根据[维基百科](https://zh.m.wikipedia.org/wiki/%E7%A9%BA%E4%B8%AD%E7%BC%96%E7%A8%8B)的定义， OTA 是一种为设备分发新软件、配置，乃至更新加密密钥（为例如移动电话、数字视频转换盒或安全语音通信设备——加密的双向无线电）的方法。 OTA 的一项重要特征是，一个中心位置可以向所有用户发送更新，其不能拒绝、破坏或改变该更新，并且该更新为立即应用到频道上的每个人。用户有可能“拒绝” OTA 更新，但频道管理者也可以将其踢出频道。由此可得出 OTA 技术几个主要的特性：
 1.  一个中心可向多个设备分发更新资料（固件）；
@@ -112,8 +112,8 @@
 
 ---
 ### 七、所需的工具
-1.  [Firmware_Packager(YModem)](https://gitee.com/DinoHaw/mOTA/tools/Firmware_Packager(YModem)) 此工具是必选项，负责打包 bin 固件，并为 bin 固件添加一个 96 byte 的表头，最终生成为 fpk(Firmware Package) 固件包。关于 96 byte 表头的具体内容，详见[《fpk固件包表头信息》](https://gitee.com/DinoHaw/mOTA/blob/master/document/fpk%E5%9B%BA%E4%BB%B6%E5%8C%85%E8%A1%A8%E5%A4%B4%E4%BF%A1%E6%81%AF.pdf)。由于 YModem-1K 协议的每包的数据大小是 1 Kbyte ，为了便于 bootloader 解包，本工具也将固件表头扩大至了 1 Kbyte ，若自定义的协议支持可变包长，可将表头长度恢复为 96 byte 。
-2.  [YModem_Sender](https://gitee.com/DinoHaw/mOTA/tools/YModem_Sender) 本工程的 example 采用广泛使用且公开的 YModem-1K 通讯协议，因此也提供了一个基于 YModem-1K 协议的发送器。由于固件发送器和通讯协议是绑定的，实际使用时，不必绑定此工具，本工程仅为了方便测试而提供。 
+1.  [Firmware_Packager(YModem)](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem)) 此工具是必选项，负责打包 bin 固件，并为 bin 固件添加一个 96 byte 的表头，最终生成为 fpk(Firmware Package) 固件包。关于 96 byte 表头的具体内容，详见[《fpk固件包表头信息》](https://gitee.com/DinoHaw/mOTA/blob/master/document/fpk%E5%9B%BA%E4%BB%B6%E5%8C%85%E8%A1%A8%E5%A4%B4%E4%BF%A1%E6%81%AF.pdf)。由于 YModem-1K 协议的每包的数据大小是 1 Kbyte ，为了便于 bootloader 解包，本工具也将固件表头扩大至了 1 Kbyte ，若自定义的协议支持可变包长，可将表头长度恢复为 96 byte 。
+2.  [YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender) 本工程的 example 采用广泛使用且公开的 YModem-1K 通讯协议，因此也提供了一个基于 YModem-1K 协议的发送器。由于固件发送器和通讯协议是绑定的，实际使用时，不必绑定此工具，本工程仅为了方便测试而提供。 
 
 > 注：以上的工具是基于 Qt5 开发的，且作为 OTA 组件的一部分，自然也是开源的。运行平台是 windows ，目前仅在 win10 和 win11 上测试过。若需要修改和编译工程，需要自行安装 Qt ，请自行搜索安装教程。
 
@@ -151,8 +151,8 @@ ram: 9720 byte (9.49 kB)
 &emsp;&emsp;由于写教程工作量较大，本开源工程暂不提供详细的移植说明文档。代码已分层设计，具备一定的移植性，有经验的工程师看 `example` 中的示例代码和本说明基本都能自行移植到别的芯片平台。这里仅做几点说明。
 > 挖个坑，后续有时间再录个移植视频。
 1.  bootloader 部分的核心代码都在 `source` 目录下，是移植的必需文件。
-2.  `source/component` 目录下的组件库非移植的必选项，根据功能需要进行裁剪。
-3.  因固件包含表头，固件写入的 flash 分区的方式与通讯协议是强相关的。若自定义的协议支持可变长度，那么建议传输第一个分包时就是固件表头的大小（标准表头大小是 96 byte ，本工程因采用 YModem-1K 协议，[固件打包器](https://gitee.com/DinoHaw/mOTA/tools/Firmware_Packager(YModem))将表头扩大到了 1 Kbyte，自行修改即可），从而方便 bootloader 解包。
+2.  `source/Component` 和 `source/BSP` 目录下的组件库非移植的必选项，根据功能需要进行裁剪。
+3.  因固件包含表头，固件写入的 flash 分区的方式与通讯协议是强相关的。若自定义的协议支持可变长度，那么建议传输第一个分包时就是固件表头的大小（标准表头大小是 96 byte ，本工程因采用 YModem-1K 协议，[固件打包器](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem))将表头扩大到了 1 Kbyte，自行修改即可），从而方便 bootloader 解包。
 4.  除开表头部分，固件的每个切包不能超过 4096 byte ，且 4096 除以每个切包大小后必须是整数（如常见的128、256、512、1024、2048等），否则就得修改源码。
 5.  单分区方案虽然节省了 flash 空间，但本组件的很多功能和安全特性都无法使用，除非 flash 实在受限，否则建议至少使用双分区的方案。
 
@@ -161,7 +161,7 @@ ram: 9720 byte (9.49 kB)
 建议参考 `example` 中的案例进行移植。
 1.  创建一个代码工程，并确保这个工程可以正常运行。（如：控制一个 LED 闪烁）
 2.  将 `source` 目录下的文件放到工程目录下，可随意放置和命名。
-3.  将 `source` 目录下的文件按需添加进代码工程中（`source/component` 目录下的组件库非移植的必选项），并包含对应的头文件目录。
+3.  将 `source` 目录下的文件按需添加进代码工程中（`source/Component` 目录下的组件库非移植的必选项），并包含对应的头文件目录。
 4.  实现 `data_transfer_port.c` 和 `fal_stm32f1_flash.c` 内的函数，若与案例一致，则无需修改。
 5.  若使用了自定义的通讯协议，则修改 `protocol_parser.c` 和 `protocol_parser.h` ，若与案例一致，则无需修改。
 6.  将 `app.c` 文件内的函数移植进你的应用代码，记得包含 `app.h` ，必要时可修改。
@@ -188,15 +188,15 @@ ram: 9720 byte (9.49 kB)
 #endif
 ```
 
-![update_flag的定义](image/update_flag%E7%9A%84%E5%AE%9A%E4%B9%89.png)
-![IDE配置RAM](image/IDE%E9%85%8D%E7%BD%AERAM.png)  
+![update_flag的定义](image/screenshot/update_flag%E7%9A%84%E5%AE%9A%E4%B9%89.png)
+![IDE配置RAM](image/screenshot/IDE%E9%85%8D%E7%BD%AERAM.png)  
 
 11.  工程配置建议选择 AC6 （虽然本组件也支持 AC5 ，除非不得已，否则建议使用 AC6），选择 C99 ，优化根据需要选择即可，建议按下图所示配置。
-![AC6的配置](image/AC6%E7%9A%84%E9%85%8D%E7%BD%AE.png)
+![AC6的配置](image/screenshot/AC6%E7%9A%84%E9%85%8D%E7%BD%AE.png)
 
 12.  尝试再次编译并解决编译器提示的问题。
 13.  若选择了“使用标志位作为固件更新的依据 `USING_APP_SET_FLAG_UPDATE` ”（否则忽略此步骤），编译通过后，查看 map 文件是否新增了一个 Region ，并且地址正确， `Type` 为 `Zero` ，该区域为 `UNINIT` ，若全部符合，则移植成功。
-![bootloader的map](image/bootloader%E7%9A%84map.png)  
+![bootloader的map](image/screenshot/bootloader%E7%9A%84map.png)  
 
 #### （二）APP 部分
 APP 部分的移植相对简单，可直接参考 `example` 中的案例。
@@ -212,8 +212,8 @@ SCB->VTOR = (uint32_t)&Image$$ER_IROM1$$Base;
 BSP_INT_EN();
 ```
 
-![设置中断向量表](image/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E6%96%AD%E5%90%91%E9%87%8F%E8%A1%A8.png)
-![IDE设置ROM地址](image/IDE%E8%AE%BE%E7%BD%AEROM%E5%9C%B0%E5%9D%80.png)  
+![设置中断向量表](image/screenshot/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E6%96%AD%E5%90%91%E9%87%8F%E8%A1%A8.png)
+![IDE设置ROM地址](image/screenshot/IDE%E8%AE%BE%E7%BD%AEROM%E5%9C%B0%E5%9D%80.png)  
 
 4.  同 bootloader 部分的步骤 10 一致。
 
@@ -247,7 +247,7 @@ HAL_NVIC_SystemReset();
 &emsp;
 
 4.  什么是 fpk ？
-> fpk 是 mOTA 组件的[固件打包器](https://gitee.com/DinoHaw/mOTA/tools/Firmware_Packager(YModem))生成的一种文件，基于 bin 文件，在其头部增加了一个 96 byte 表头后合成的一个新文件，后缀是 `.fpk` 。fpk 取自英文词语 Firmware Package 的缩写，意为固件程序包，本组件统称为固件包，而提及固件时，一般指的是 bin 文件。
+> fpk 是 mOTA 组件的[固件打包器](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem))生成的一种文件，基于 bin 文件，在其头部增加了一个 96 byte 表头后合成的一个新文件，后缀是 `.fpk` 。fpk 取自英文词语 Firmware Package 的缩写，意为固件程序包，本组件统称为固件包，而提及固件时，一般指的是 bin 文件。
 
 &emsp;
 
