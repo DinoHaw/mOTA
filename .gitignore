@@ -50,3 +50,16 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# for moTA
+*.fpk
+
+# for keil
+*.bin
+*.dbgconf
+*.lst
+*.Administrator
+*.axf
+*.htm
+*.lnp
+
