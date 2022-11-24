@@ -57,7 +57,7 @@
 | user_config.h        | 用户配置文件，用于裁剪 OTA 组件的功能 |
 | app_config.h         | 应用配置文件，配置代码工程的一些运行选项 |
 | app.c                | 应用层，负责业务逻辑代码的实现 |
-| firmware_manage.c    | 固件的管理接口蹭，提供了固件的所有操作接口 |
+| firmware_manage.c    | 固件的管理接口层，提供了固件的所有操作接口 |
 | protocol_parser.c    | 协议析构层，实现协议的解包和封包 |
 | data_transfer.c      | 数据传输层，对外提供数据发送和接收的接口 |
 | data_transfer_port.c | 数据传输层的移植位置，便于修改为其它通讯接口 |
