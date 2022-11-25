@@ -1,0 +1,4 @@
+[submodule "tools/firmware_packager"]
+	url  = https://gitee.com/DinoHaw/firmware_packager
+	path = tools/firmware_packager
+
