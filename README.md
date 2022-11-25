@@ -2,7 +2,7 @@
 # mOTA
 
 ### 一、简介
-&emsp;&emsp;本开源工程是一款专为 32 位 MCU 开发的 OTA 组件，组件包含了 **[bootloader](https://gitee.com/DinoHaw/mOTA/tree/master/source)** **、固件打包器** **([Firmware_Packager](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem)))** **、固件发送器** 三部分，并提供了一个基于 STM32F103 和 YModem-1K 协议的案例，因此本案例的固件发送器名为 **[YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender)** 。
+&emsp;&emsp;本开源工程是一款专为 32 位 MCU 开发的 OTA 组件，组件包含了 **[bootloader](https://gitee.com/DinoHaw/mOTA/tree/master/source)** **、固件打包器** **([Firmware_Packager](https://gitee.com/DinoHaw/firmware_packager))** **、固件发送器** 三部分，并提供了一个基于 STM32F103 和 YModem-1K 协议的案例，因此本案例的固件发送器名为 **[YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender)** 。
 
 &emsp;&emsp;mOTA 中的 m 可意为 mini 、 micro 、 MCU ( Microcontroller Unit )，而 OTA ( Over-the-Air Technology )，即空中下载技术，根据[维基百科](https://zh.m.wikipedia.org/wiki/%E7%A9%BA%E4%B8%AD%E7%BC%96%E7%A8%8B)的定义， OTA 是一种为设备分发新软件、配置，乃至更新加密密钥（为例如移动电话、数字视频转换盒或安全语音通信设备——加密的双向无线电）的方法。 OTA 的一项重要特征是，一个中心位置可以向所有用户发送更新，其不能拒绝、破坏或改变该更新，并且该更新为立即应用到频道上的每个人。用户有可能“拒绝” OTA 更新，但频道管理者也可以将其踢出频道。由此可得出 OTA 技术几个主要的特性：
 1.  一个中心可向多个设备分发更新资料（固件）；
@@ -112,10 +112,11 @@
 
 ---
 ### 七、所需的工具
-1.  [Firmware_Packager(YModem)](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem)) 此工具是必选项，负责打包 bin 固件，并为 bin 固件添加一个 96 byte 的表头，最终生成为 fpk(Firmware Package) 固件包。关于 96 byte 表头的具体内容，详见[《fpk固件包表头信息》](https://gitee.com/DinoHaw/mOTA/blob/master/document/fpk%E5%9B%BA%E4%BB%B6%E5%8C%85%E8%A1%A8%E5%A4%B4%E4%BF%A1%E6%81%AF.pdf)。由于 YModem-1K 协议的每包的数据大小是 1 Kbyte ，为了便于 bootloader 解包，本工具也将固件表头扩大至了 1 Kbyte ，若自定义的协议支持可变包长，可将表头长度恢复为 96 byte 。
+1.  [Firmware_Packager](https://gitee.com/DinoHaw/firmware_packager) 此工具是必选项，负责打包 bin 固件，并为 bin 固件添加一个 96 byte 的表头，最终生成为 fpk(Firmware Package) 固件包。关于 96 byte 表头的具体内容，详见[《fpk固件包表头信息》](https://gitee.com/DinoHaw/mOTA/blob/master/document/fpk%E5%9B%BA%E4%BB%B6%E5%8C%85%E8%A1%A8%E5%A4%B4%E4%BF%A1%E6%81%AF.pdf)。由于 YModem-1K 协议的每包的数据大小是 1 Kbyte ，为了便于 bootloader 解包，本工具也将固件表头扩大至了 1 Kbyte ，若自定义的协议支持可变包长，可将表头长度恢复为 96 byte 。
+> 需要注意的是，本案例选择了 YModem-1K 协议，因此若直接采用或测试 `example` 目录中的案例，固件打包器的表头尺寸需要选择 1024 byte 。
 2.  [YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender) 本工程的 example 采用广泛使用且公开的 YModem-1K 通讯协议，因此也提供了一个基于 YModem-1K 协议的发送器。由于固件发送器和通讯协议是绑定的，实际使用时，不必绑定此工具，本工程仅为了方便测试而提供。 
 
-> 注：以上的工具是基于 Qt5 开发的，且作为 OTA 组件的一部分，自然也是开源的。运行平台是 windows ，目前仅在 win10 和 win11 上测试过。若需要修改和编译工程，需要自行安装 Qt ，请自行搜索安装教程。
+> 注：以上的工具是基于 Qt6 开发的，[YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender) 依赖 Qt 的 serial_port 库，需要自行添加。以上工具作为 OTA 组件的一部分，自然也是开源的。运行平台是 windows ，目前仅在 win10 和 win11 上测试过。若需要修改和编译工程，需要自行安装 Qt ，请自行搜索安装教程。
 
 &emsp;
 
@@ -152,7 +153,7 @@ ram: 9720 byte (9.49 kB)
 > 挖个坑，后续有时间再录个移植视频。
 1.  bootloader 部分的核心代码都在 `source` 目录下，是移植的必需文件。
 2.  `source/Component` 和 `source/BSP` 目录下的组件库非移植的必选项，根据功能需要进行裁剪。
-3.  因固件包含表头，固件写入的 flash 分区的方式与通讯协议是强相关的。若自定义的协议支持可变长度，那么建议传输第一个分包时就是固件表头的大小（标准表头大小是 96 byte ，本工程因采用 YModem-1K 协议，[固件打包器](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem))将表头扩大到了 1 Kbyte，自行修改即可），从而方便 bootloader 解包。
+3.  因固件包含表头，固件写入的 flash 分区的方式与通讯协议是强相关的。若自定义的协议支持可变长度，那么建议传输第一个分包时就是固件表头的大小（标准表头大小是 96 byte ，本工程因采用 YModem-1K 协议，[固件打包器](https://gitee.com/DinoHaw/firmware_packager)将表头扩大到了 1 Kbyte，自行修改即可），从而方便 bootloader 解包。
 4.  除开表头部分，固件的每个切包不能超过 4096 byte ，且 4096 除以每个切包大小后必须是整数（如常见的128、256、512、1024、2048等），否则就得修改源码。
 5.  单分区方案虽然节省了 flash 空间，但本组件的很多功能和安全特性都无法使用，除非 flash 实在受限，否则建议至少使用双分区的方案。
 
@@ -247,7 +248,7 @@ HAL_NVIC_SystemReset();
 &emsp;
 
 4.  什么是 fpk ？
-> fpk 是 mOTA 组件的[固件打包器](https://gitee.com/DinoHaw/mOTA/tree/master/tools/Firmware_Packager(YModem))生成的一种文件，基于 bin 文件，在其头部增加了一个 96 byte 表头后合成的一个新文件，后缀是 `.fpk` 。fpk 取自英文词语 Firmware Package 的缩写，意为固件程序包，本组件统称为固件包，而提及固件时，一般指的是 bin 文件。
+> fpk 是 mOTA 组件的[固件打包器](https://gitee.com/DinoHaw/firmware_packager)生成的一种文件，基于 bin 文件，在其头部增加了一个 96 byte 表头后合成的一个新文件，后缀是 `.fpk` 。fpk 取自英文词语 Firmware Package 的缩写，意为固件程序包，本组件统称为固件包，而提及固件时，一般指的是 bin 文件。
 
 &emsp;
 
