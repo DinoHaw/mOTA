@@ -53,6 +53,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+extern void Main_Start(void);
 extern void System_Init(void);
 extern void APP_Init(void);
 extern void APP_Running(void);
@@ -70,8 +71,7 @@ extern void APP_Running(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  
-  
+  Main_Start();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
