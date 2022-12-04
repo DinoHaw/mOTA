@@ -29,7 +29,14 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         1. 增加一个记录版本的机制，可选写在 APP 分区
+ *                             2. 增加长按按键恢复出厂固件的选项
+ *                             3. 将 flash 的擦除粒度配置移至 user_config.h 
+ *                             4. 增加是否判断固件包超过分区大小的选项
  */
 
 /**
@@ -126,14 +133,15 @@
  *    ENABLE_FACTORY_FIRMWARE_BUTTON: 选择是否启用长按按键恢复出厂固件
  *    FACTORY_FIRMWARE_BUTTON_PRESS:  按键按下时的电平逻辑
  *    FACTORY_FIRMWARE_BUTTON_TIME:   按键长按的持续时间，单位 ms
- * ENABLE_FACTORY_FIRMWARE_BUTTON 选项: 
- *    0: 不启用
- *    1: 启用
- * FACTORY_FIRMWARE_BUTTON_PRESS 选项: 
- *    KEY_PRESS_LOW:  表示按下时为低电平
- *    KEY_PRESS_HIGH: 表示按下时为高电平
- * FACTORY_FIRMWARE_BUTTON_TIME 选项: 
- *    按键长按的持续时间，单位 ms ，不能大于 65535
+ * 选项：
+ *    ENABLE_FACTORY_FIRMWARE_BUTTON 选项: 
+ *        0: 不启用
+ *        1: 启用
+ *    FACTORY_FIRMWARE_BUTTON_PRESS 选项: 
+ *        KEY_PRESS_LOW:  表示按下时为低电平
+ *        KEY_PRESS_HIGH: 表示按下时为高电平
+ *    FACTORY_FIRMWARE_BUTTON_TIME 选项: 
+ *        按键长按的持续时间，单位 ms ，不能大于 65535
  */ 
 #if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
 #define ENABLE_FACTORY_FIRMWARE_BUTTON      0

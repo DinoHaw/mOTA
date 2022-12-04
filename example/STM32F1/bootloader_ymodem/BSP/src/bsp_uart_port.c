@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         Ôö¼Ó __HAL_UART_FLUSH_DRREGISTER
  */
 
 
@@ -176,6 +180,9 @@ void BSP_UART_Port_Init( struct UART_STRUCT *uart,
     
     if (uart->handle.hdmatx)
         uart->handle.hdmatx->Parent = &uart->handle;
+    
+    /* Clean the input path */
+    __HAL_UART_FLUSH_DRREGISTER(&uart->handle);
     
     BSP_Printf("-----------------------------\r\n");
     BSP_Printf("[ %s ]\r\n", __func__);

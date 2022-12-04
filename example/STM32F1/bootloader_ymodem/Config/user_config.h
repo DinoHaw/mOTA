@@ -29,7 +29,14 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         1. 增加一个记录版本的机制，可选写在 APP 分区
+ *                             2. 增加长按按键恢复出厂固件的选项
+ *                             3. 将 flash 的擦除粒度配置移至 user_config.h 
+ *                             4. 增加是否判断固件包超过分区大小的选项
  */
 
 /**
@@ -59,7 +66,7 @@
  * 说明: 
  *    配置各个分区的大小
  * 注意事项: 
- *    ！！！片内 Flash 需进行页对齐， 分区首地址必须是 FLASH_PAGE_SIZE 的整数倍，否则固件无法运行！！！
+ *    ！！！片内 Flash 需进行页对齐， 分区首地址必须是 Flash 的 每个独立 page 或 sector 的首地址，否则固件无法运行！！！
  *    ！！！放置在 SPI Flash 的分区至少需要最小擦写粒度的整数倍为单位进行对齐，建议以 sector 的整数倍为单位进行对齐！！！
  */
 #define ONCHIP_FLASH_SIZE                   ((uint32_t)(512 * 1024))    /* 片上 flash 容量，单位: byte */
@@ -112,25 +119,53 @@
     #define FIRMWARE_RECOVERY_MAGIC_WORD    0x5A5A5A5A      /* 需要恢复出厂固件的特殊标记（不建议修改，一定要和 APP 一致） */
     #define BOOTLOADER_RESET_MAGIC_WORD     0xAAAAAAAA      /* bootloader 复位的特殊标记（不建议修改，一定要和 APP 一致） */
     #endif
-    
+
+
 /**
- * 【选择当需要恢复出厂固件时，若 factory 分区无固件或固件校验有问题时的解决方案】
+ * 【选择是否使用按键恢复出厂固件的选项】
+ * 说明: 
+ *    1. 使用本选项的前提是三分区方案，本选项能起效的前提是正确配置了按键且 factory 分区有可用的固件
+ *    2. 选择使用按键恢复出厂固件时，需要配置按键的引脚，如使用的按键和本案例不同，则需要自己配置和初始化 GPIO
+ *    3. 本选项仅设备在运行 bootloader 时，可通过按键恢复出厂固件，若设备运行着 APP ，则本选项是无法起效的，因此需要 APP 也同步配置
+ *    4. 本选项和通过指令恢复出厂固件的方式不冲突，可以同时使用，也可以不启用本选项
+ *    5. 当无 factory 或 factory 无可用固件时，强行恢复出厂固件，将会触发 FACTORY_NO_FIRMWARE_SOLUTION 选项
  * 解释：
- *    JUMP_TO_APP:           尝试跳转至 APP
- *    WAIT_FOR_NEW_FIRMWARE: 等待上位机发送新的固件包
+ *    ENABLE_FACTORY_FIRMWARE_BUTTON: 选择是否启用长按按键恢复出厂固件
+ *    FACTORY_FIRMWARE_BUTTON_PRESS:  按键按下时的电平逻辑
+ *    FACTORY_FIRMWARE_BUTTON_TIME:   按键长按的持续时间，单位 ms
  * 选项：
- *    JUMP_TO_APP            或 0
- *    WAIT_FOR_NEW_FIRMWARE  或 1
- */
+ *    ENABLE_FACTORY_FIRMWARE_BUTTON 选项: 
+ *        0: 不启用
+ *        1: 启用
+ *    FACTORY_FIRMWARE_BUTTON_PRESS 选项: 
+ *        KEY_PRESS_LOW:  表示按下时为低电平
+ *        KEY_PRESS_HIGH: 表示按下时为高电平
+ *    FACTORY_FIRMWARE_BUTTON_TIME 选项: 
+ *        按键长按的持续时间，单位 ms ，不能大于 65535
+ */ 
 #if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
-#define FACTORY_NO_FIRMWARE_SOLUTION        JUMP_TO_APP          
+#define ENABLE_FACTORY_FIRMWARE_BUTTON      0
+#define FACTORY_FIRMWARE_BUTTON_PRESS       KEY_PRESS_LOW
+#define FACTORY_FIRMWARE_BUTTON_TIME        3000
 #endif
+
+
+/**
+ * 【选择判断固件包是否超过分区大小的选项】
+ * 说明: 
+ *    当启用判断时，若有特殊处理，需自行修改代码，位于 app.c 的 APP_Running 函数 的 EXE_FLOW_VERIFY_FIRMWARE_HEAD 流程
+ * 选项: 
+ *    0: 不启用
+ *    1: 启用
+ */ 
+#define ENABLE_CHECK_FIRMWARE_SIZE          1
 
 
 /**
  * 【选择自动更新固件的处理方案】
  * 说明: 
- *    在固件更新过程中设备异常断电或重启后，选择是否自动更新已下载好的固件以及自动更新的处理方案
+ *    1. 在固件更新过程中设备异常断电或重启后，选择是否自动更新已下载好的固件以及自动更新的处理方案
+ *    2. 该选项的执行优先级低于上位机更新的方式，这意味着除非上位机超时未发送数据，否则将会优先执行上位机的固件更新
  * 解释: 
  *    
  *    DO_NOT_AUTO_UPDATE:           不需要自动更新，不希望有这种断电恢复固件的机制
@@ -140,13 +175,24 @@
  *                                    因为 APP 固件安规校验的数据来源是 download 分区的固件包。
  *    MODIFY_DOWNLOAD_PART_PROJECT: 更新完成后修改 download 分区的固件表头的版本信息。设备上电时会对比 download 分区固件包头记录的新旧版本，
  *                                  若新旧版本不一致，则开始自动更新固件
- *                                  * 此种方式需要修改 download 分区的数据，因此步骤较多，但带来的额外好处是可以上电时校验 APP 分区
- *                                    的固件数据正确性和完整性，以提高 APP 固件有损坏或遭篡改时的安全性，甚至可以将固件恢复正
- *                                    常，有效提高系统的安全等级
+ *                                  * 此种方式需要修改 download 分区的数据，有以下优劣势：
+ *                                    1. 优势：上电时可校验 APP 分区的固件数据正确性和完整性，以提高 APP 固件有损坏或遭篡改时的安全性，甚至
+ *                                             可以将固件恢复正常，有效提高系统的安全等级
+ *                                    2. 劣势：需要对表头所在的 flash sector 擦除后再重新写入，这意味着每次更新都会擦除同个 sector 两次。
+ *                                             倘若 flash 的最小擦除粒度比较大，该方式是无法实现的，因为部分 MCU 的 flash 最小擦除粒度
+ *                                             较大，如 STM32 的 F4 系列，其 sector0 是 16 byte ，相对于 VERSION_WRITE_TO_APP 选项，
+ *                                             实在得不偿失，除非 sector 较小，如 1 或 2 kByte ，否则推荐选择 VERSION_WRITE_TO_APP                                   
+ *    VERSION_WRITE_TO_APP:         更新完成后将新的固件版本写进 APP 分区的尾部，占用 16 byte ，设备上电时会对比 download 分区固件包头
+ *                                  记录的版本和 APP 存放的版本，若两个版本不一致，则开始自动更新固件
+ *                                  * 此种方式有以下优劣势：
+ *                                    1. 优势：上电时可校验 APP 分区的固件数据正确性和完整性，以提高 APP 固件有损坏或遭篡改时的安全性，甚至
+ *                                             可以将固件恢复正常，有效提高系统的安全等级
+ *                                    2. 劣势：需要占用 APP 分区 16 byte 的空间
  * 选项: 
  *    DO_NOT_AUTO_UPDATE            或 0
  *    ERASE_DOWNLOAD_PART_PROJECT   或 1
  *    MODIFY_DOWNLOAD_PART_PROJECT  或 2
+ *    VERSION_WRITE_TO_APP          或 3
  */
 #if (USING_PART_PROJECT > ONE_PART_PROJECT)
 #define USING_AUTO_UPDATE_PROJECT           MODIFY_DOWNLOAD_PART_PROJECT
@@ -154,10 +200,21 @@
 
 
 /**
+ * 【片内 Flash 放置固件包所在 sector 的擦除粒度 ( TODO: 暂未实现 )】
+ * 说明: 
+ *    USING_AUTO_UPDATE_PROJECT = MODIFY_DOWNLOAD_PART_PROJECT 时，需要给出固件包所在 sector 的擦除粒度，单位是 byte
+ */
+#if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
+#define ONCHIP_FLASH_ERASE_GRANULARITY      FPK_LEAST_HANDLE_BYTE
+#endif
+
+
+/**
  * 【选择是否在上电后对 APP 的固件进行安规校验 及 APP 固件检查有问题时的操作方案】
  * 说明: 
- *    部分产品对固件的完整性有安规等级要求，本组件支持 APP 固件的数据完整性检查，通过配置以选择是否启用
- *    当启用时，通过配置 USING_APP_SAFETY_PROJECT 可选择 APP 固件检查有问题时的操作方案
+ *    1. USING_AUTO_UPDATE_PROJECT = MODIFY_DOWNLOAD_PART_PROJECT 时，本配置才会起效
+ *    2. 部分产品对固件的完整性有安规等级要求，本组件支持 APP 固件的数据完整性检查，通过配置以选择是否启用
+ *    3. 当启用时，通过配置 USING_APP_SAFETY_PROJECT 可选择 APP 固件检查有问题时的操作方案
  * 解释: 
  *    DO_NOT_CHECK      : 不校验 APP 固件，即不启用
  *    CHECK_UNLESS_EMPTY: 校验 APP 固件，但无法校验时不校验，确保能运行 APP 而不至于等在 bootloader 中。若 APP 固件校验错误，将会
@@ -182,7 +239,8 @@
  *    AUTO_UPDATE_APP       或 2
  *    DO_NOT_DO_ANYTHING    或 3
  */
-#if (USING_PART_PROJECT > ONE_PART_PROJECT && USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
+#if (USING_PART_PROJECT > ONE_PART_PROJECT &&   \
+     (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT || USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP))
 #define USING_APP_SAFETY_CHECK_PROJECT      CHECK_UNLESS_EMPTY
 #endif
 
@@ -203,6 +261,20 @@
 
 
 /**
+ * 【选择当需要恢复出厂固件时，若 factory 分区无固件或固件校验有问题时的解决方案】
+ * 解释：
+ *    JUMP_TO_APP:           尝试跳转至 APP
+ *    WAIT_FOR_NEW_FIRMWARE: 等待上位机发送新的固件包
+ * 选项：
+ *    JUMP_TO_APP            或 0
+ *    WAIT_FOR_NEW_FIRMWARE  或 1
+ */
+#if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
+#define FACTORY_NO_FIRMWARE_SOLUTION        JUMP_TO_APP          
+#endif
+
+
+/**
  * 【选择是否自动纠正固件的分区】
  * 说明: 
  *    该选项是为了修正人为的将分区名写错的情况，是一种能最大程度保证固件更新正常的挽救措施
@@ -219,7 +291,7 @@
 
 
 /**
- * 【选择是否使用 SPI Flash 存放固件( TODO: 暂未实现 )】
+ * 【选择是否使用 SPI Flash 存放固件 ( TODO: 暂未实现 )】
  * 说明: 
  *    SPI Flash 可用于放置固件包，但只能用做 download 分区和 factory 分区
  *    本工程使用了 SFUD 库，因此可自动兼容不同厂家和不同容量的 SPI Flash 
@@ -236,7 +308,18 @@
 
 
 /**
- * 【选择分区的存放位置( TODO: 暂时仅支持片内)】
+ * 【SPI Flash 放置固件包所在 sector 的擦除粒度 ( TODO: 暂未实现 )】
+ * 说明: 
+ *    USING_AUTO_UPDATE_PROJECT = MODIFY_DOWNLOAD_PART_PROJECT 且 启用了 SPI Flash 时，需要给出固件包所在 sector 的擦除粒度，
+ *    单位是 byte
+ */
+#if (ENABLE_SPI_FLASH && USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
+#define SPI_FLASH_ERASE_GRANULARITY         4096
+#endif
+
+
+/**
+ * 【选择分区的存放位置 ( TODO: 暂时仅支持片内)】
  * 说明: 
  *    当选择启用 SPI Flash 存放固件时，需要指定 download 和 factory 分区的存放位置
  *    本工程使用了 FAL 库，用于管理 flash 的分区。（仅在启用 SPI Flash 时）

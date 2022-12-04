@@ -29,8 +29,16 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
  * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         1. 增加一个记录版本的机制，可选写在 APP 分区
+ *                             2. 修复 AC6 -O0 优化下，无法正常运行 APP 的问题
+ *                             3. 增加长按按键恢复出厂固件的选项
+ *                             4. 将 flash 的擦除粒度配置移至 user_config.h 
+ *                             5. 增加 Main_Satrt() 函数
+ *                             6. 增加是否判断固件包超过分区大小的选项
  */
 
 

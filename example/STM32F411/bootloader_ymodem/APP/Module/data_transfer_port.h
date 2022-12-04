@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         增加断帧检测
  */
 
 #ifndef __DATA_TRANSFER_PORT_H__
@@ -38,6 +42,7 @@
 #include "bsp_common.h"
 #include "data_transfer.h"
 
+/* 是否使能断帧检测 */
 #define DT_ENABLE_BROKEN_FRAME_DETECT   1
 
 #define BROKEN_FRAME_INTERVAL_TIME      100         /* 断帧间隔时间判断，单位 ms */

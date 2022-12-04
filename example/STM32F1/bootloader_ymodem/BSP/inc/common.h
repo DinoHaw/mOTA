@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         Ôö¼Ó __IS_COMPILER_ARM_COMPILER__
  */
 
 #ifndef __INCLUDES_H__
@@ -76,7 +80,7 @@
 #   undef __IS_COMPILER_IAR__
 #endif
 #if defined(__IAR_SYSTEMS_ICC__)
-#   define __IS_COMPILER_IAR__                 1
+#   define __IS_COMPILER_IAR__                  1
 #endif
 
 //! \note for arm compiler 5
@@ -84,7 +88,7 @@
 #   undef __IS_COMPILER_ARM_COMPILER_5__
 #endif
 #if ((__ARMCC_VERSION >= 5000000) && (__ARMCC_VERSION < 6000000))
-#   define __IS_COMPILER_ARM_COMPILER_5__      1
+#   define __IS_COMPILER_ARM_COMPILER_5__       1
 #endif
 //! @}
 
@@ -93,21 +97,29 @@
 #   undef __IS_COMPILER_ARM_COMPILER_6__
 #endif
 #if ((__ARMCC_VERSION >= 6000000) && (__ARMCC_VERSION < 7000000))
-#   define __IS_COMPILER_ARM_COMPILER_6__      1
+#   define __IS_COMPILER_ARM_COMPILER_6__       1
+#endif
+
+#ifdef __IS_COMPILER_ARM_COMPILER__
+#   undef __IS_COMPILER_ARM_COMPILER__
+#endif
+#if defined(__IS_COMPILER_ARM_COMPILER_5__) && __IS_COMPILER_ARM_COMPILER_5__   \
+||  defined(__IS_COMPILER_ARM_COMPILER_6__) && __IS_COMPILER_ARM_COMPILER_6__
+#   define __IS_COMPILER_ARM_COMPILER__         1
 #endif
 
 #ifdef __IS_COMPILER_LLVM__
 #   undef  __IS_COMPILER_LLVM__
 #endif
 #if defined(__clang__) && !__IS_COMPILER_ARM_COMPILER_6__
-#   define __IS_COMPILER_LLVM__                1
+#   define __IS_COMPILER_LLVM__                 1
 #else
 //! \note for gcc
 #ifdef __IS_COMPILER_GCC__
 #   undef __IS_COMPILER_GCC__
 #endif
 #if defined(__GNUC__) && !(__IS_COMPILER_ARM_COMPILER_6__ || __IS_COMPILER_LLVM__)
-#   define __IS_COMPILER_GCC__                 1
+#   define __IS_COMPILER_GCC__                  1
 #endif
 //! @}
 #endif

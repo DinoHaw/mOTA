@@ -360,9 +360,9 @@ FM_ERR_CODE  FM_VerifyFirmware(const char *part_name, uint32_t crc32, uint8_t is
 #endif
 
     BSP_Printf("fpk size: %d byte\r\n", FPK_HEAD_SIZE);
-    uint8_t *p = (uint8_t *)&_fpk_head;
     for (uint8_t i = 0; i < 6; i++)
     {
+        uint8_t *p = (uint8_t *)&_fpk_head;
         for (uint8_t j = 0; j < FPK_HEAD_SIZE / 6; j++)
             BSP_Printf("%.2X ", p[(i * (FPK_HEAD_SIZE / 6)) + j]);
         BSP_Printf("\r\n");
@@ -601,6 +601,30 @@ FM_ERR_CODE  FM_CheckFirmwareIntegrity(uint32_t addr)
 uint8_t FM_IsNeedAutoUpdate(void)
 {
     BSP_Printf("%s\r\n", __func__);
+
+#if (USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
+    #if (ENABLE_SPI_FLASH)  
+    const struct fal_partition *part = NULL;
+    
+    part = fal_partition_find(APP_PART_NAME);
+    #else
+    const struct BSP_FLASH *part = NULL;
+    
+    part = BSP_Flash_GetHandle(APP_PART_NAME);
+    #endif
+    if (part == NULL)
+    {
+        BSP_Printf("%s: not found app part.\r\n", __func__);
+        return FM_ERR_NO_THIS_PART;
+    }
+    
+    if (BSP_Flash_Read(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_old_ver[0], FPK_VERSION_SIZE) < 0)
+    {
+        BSP_Printf("%s: read error.\r\n", __func__);
+        return FM_ERR_READ_VER_ERR;
+    }
+#endif
+
     BSP_Printf("fw old ver: V%d.%d.%d.%d\r\n", _fpk_head.fw_old_ver[0], _fpk_head.fw_old_ver[1], _fpk_head.fw_old_ver[2], _fpk_head.fw_old_ver[3]);
     BSP_Printf("fw new ver: V%d.%d.%d.%d\r\n", _fpk_head.fw_new_ver[0], _fpk_head.fw_new_ver[1], _fpk_head.fw_new_ver[2], _fpk_head.fw_new_ver[3]);
 
@@ -611,7 +635,7 @@ uint8_t FM_IsNeedAutoUpdate(void)
         return 1;
     else
         return 0;
-
+    
 //    if (strncmp(_fpk_head.fw_old_ver, _fpk_head.fw_new_ver, FPK_VERSION_SIZE) == 0)
 //        return 0;
 //    return 1;
@@ -870,7 +894,7 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
     {
         BSP_Printf("%s: %s part erase failed.\r\n", __func__, part_name);
         return FM_ERR_UPDATE_VER_ERASE_ERR;
-    }  
+    }
 
     /* 将新的数据写入擦除的区域 */ 
     if (fal_partition_write(part, 0, &_fpk_min_handle_buff[0], SPI_FLASH_ERASE_GRANULARITY) < 0)
@@ -949,6 +973,56 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
 
     return FM_ERR_OK;
 }
+
+
+#elif (USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
+/**
+ * @brief  更新固件包中的版本信息
+ * @note   
+ * @param[in]  part_name: 分区名称
+ * @retval FM_ERR_CODE
+ */
+FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
+{
+#if (ENABLE_SPI_FLASH)  
+    const struct fal_partition *part = NULL;
+    
+    part = fal_partition_find(APP_PART_NAME);
+#else
+    const struct BSP_FLASH *part = NULL;
+    
+    part = BSP_Flash_GetHandle(APP_PART_NAME);
+#endif
+    if (part == NULL)
+    {
+        BSP_Printf("%s: not found APP part.\r\n", __func__);
+        return FM_ERR_NO_THIS_PART;
+    }
+    
+    if (BSP_Flash_Read(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_old_ver[0], FPK_VERSION_SIZE) < 0)
+    {
+        BSP_Printf("%s: read error.\r\n", __func__);
+        return FM_ERR_READ_VER_ERR;
+    }
+
+    if (_fpk_head.fw_old_ver[0] != 0xFF
+    ||  _fpk_head.fw_old_ver[1] != 0xFF
+    ||  _fpk_head.fw_old_ver[2] != 0xFF
+    ||  _fpk_head.fw_old_ver[3] != 0xFF)
+    {
+        BSP_Printf("%s: version area no erase.\r\n", __func__);
+        return FM_ERR_VER_AREA_NO_ERASE;
+    }
+
+    if (BSP_Flash_Write(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_new_ver[0], FPK_VERSION_SIZE) < 0)
+    {
+        BSP_Printf("%s: write error.\r\n", __func__);
+        return FM_ERR_WRITE_VER_ERR;
+    }
+
+    return FM_ERR_OK;
+}
+
 #endif /* #if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT) */
 
 #endif /* #if (USING_PART_PROJECT > ONE_PART_PROJECT) */

@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         增加 VERSION_WRITE_TO_APP
  */
 
 #ifndef __APP_CONFIG_H__
@@ -56,9 +60,6 @@
 #define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTT的打印端口 */
 #define MAX_NAME_LEN                        8
 
-#define ONCHIP_FLASH_ERASE_GRANULARITY      FLASH_PAGE_SIZE     /* 片内flash最小擦除粒度 */
-#define SPI_FLASH_ERASE_GRANULARITY         4096                /* SPI flash最小擦除粒度 */
-
 
 /*************************************** 以下不建议修改 ***************************************/
 /* USING_PART_PROJECT */
@@ -78,6 +79,7 @@
 #define DO_NOT_AUTO_UPDATE                  0
 #define ERASE_DOWNLOAD_PART_PROJECT         1
 #define MODIFY_DOWNLOAD_PART_PROJECT        2
+#define VERSION_WRITE_TO_APP                3
 
 /* USING_APP_SAFETY_CHECK_PROJECT */
 #define DO_NOT_CHECK                        0

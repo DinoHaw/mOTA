@@ -1,6 +1,6 @@
 /**
- * \file            data_transfer_port.h
- * \brief           portable file of the transfer data layer
+ * \file            bsp_gpio.h
+ * \brief           gpio driver
  */
 
 /*
@@ -29,28 +29,41 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.1
- * Change Logs:
- * Date           Author       Notes
- * 2022-11-23     Dino         the first version
- * 2022-12-04     Dino         增加断帧检测
+ * Version:         v1.0.0
  */
 
-#ifndef __DATA_TRANSFER_PORT_H__
-#define __DATA_TRANSFER_PORT_H__
+#ifndef __BSP_GPIO_H__
+#define __BSP_GPIO_H__
 
 #include "bsp_common.h"
-#include "data_transfer.h"
 
-/* 是否使能断帧检测 */
-#define DT_ENABLE_BROKEN_FRAME_DETECT   0
+#define GPIO_LOW                    0x00
+#define GPIO_HIGH                   0x01
 
-#define BROKEN_FRAME_INTERVAL_TIME      100         /* 断帧间隔时间判断，单位 ms */
+#define STM32_PORT(port)            GPIO##port##_BASE
 
-void    DT_Port_Init            (struct DATA_TRANSFER *xfer);
-void    DT_Port_SendData        (struct DATA_TRANSFER *xfer, uint8_t *data, uint32_t len);
-uint8_t DT_Port_IsRecvData      (struct DATA_TRANSFER *xfer);
-void    DT_Port_ClearRecvBuff   (struct DATA_TRANSFER *xfer);
+#define GET_PIN(port, pin)          (uint32_t)((16 * ( ((uint32_t)STM32_PORT(port) - (uint32_t)GPIOA_BASE)/(0x0400UL) )) + pin)
+
+#define STM32_PIN(index, gpio, gpio_index)          \
+{                                                   \
+    index, GPIO##gpio, GPIO_PIN_##gpio_index        \
+}
+
+/* STM32 GPIO driver */
+struct GPIO_INDEX
+{
+    int index;
+    GPIO_TypeDef *gpio;
+    uint16_t pin;
+};
+
+void            BSP_GPIO_Write      (uint8_t io, uint8_t level);
+uint8_t         BSP_GPIO_Read       (uint8_t io);
+void            BSP_GPIO_Toggle     (uint8_t io);
+void            BSP_GPIO_SetMode    (uint8_t io, uint32_t mode, uint32_t pull);
+
+GPIO_TypeDef *  BSP_GPIO_GetPort    (uint8_t io);
+uint16_t        BSP_GPIO_GetPin     (uint8_t io);
 
 #endif
 
