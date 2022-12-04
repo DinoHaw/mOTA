@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         增加断帧检测
  */
 
 /* Includes ------------------------------------------------------------------*/
@@ -37,11 +41,14 @@
 
 
 /* Private variables ---------------------------------------------------------*/
+#if (DT_ENABLE_BROKEN_FRAME_DETECT)
+static uint8_t _timeout_flag;
 static struct BSP_TIMER _timer_frame_detect;
 
 
 /* Private function prototypes -----------------------------------------------*/
 static void _Timeout_FrameDetect(void *user_data);
+#endif
 
 
 /* Exported functions ---------------------------------------------------------*/
@@ -60,11 +67,13 @@ void DT_Port_Init(struct DATA_TRANSFER *xfer)
                             xfer->rx_len,
                             xfer->rx_buff_size);
 
+#if (DT_ENABLE_BROKEN_FRAME_DETECT)
     BSP_Timer_Init( &_timer_frame_detect, 
                     _Timeout_FrameDetect, 
                     BROKEN_FRAME_INTERVAL_TIME, 
                     1, 
-                    TIMER_TYPE_HARDWARE);    
+                    TIMER_TYPE_HARDWARE);   
+#endif    
 }
 
 
@@ -90,7 +99,23 @@ inline void DT_Port_SendData(struct DATA_TRANSFER *xfer, uint8_t *data, uint32_t
  */
 inline uint8_t DT_Port_IsRecvData(struct DATA_TRANSFER *xfer)
 {
+#if (DT_ENABLE_BROKEN_FRAME_DETECT)
+    if (_timeout_flag)
+    {
+        _timeout_flag = 0;
+        return BSP_UART_ERR_OK;
+    }
+    else if (BSP_UART_IsFrameEnd((BSP_UART_ID)xfer->if_id) == BSP_UART_ERR_OK)
+    {
+        BSP_Timer_LinkUserData(&_timer_frame_detect, xfer);
+        BSP_Timer_Restart(&_timer_frame_detect);
+        return BSP_UART_ERR_NO_RECV_FRAME;
+    }
+    
+    return BSP_UART_ERR_NO_RECV_FRAME;
+#else
     return BSP_UART_IsFrameEnd((BSP_UART_ID)xfer->if_id);
+#endif
 }
 
 
@@ -102,11 +127,15 @@ inline uint8_t DT_Port_IsRecvData(struct DATA_TRANSFER *xfer)
  */
 inline void DT_Port_ClearRecvBuff(struct DATA_TRANSFER *xfer)
 {
+#if (DT_ENABLE_BROKEN_FRAME_DETECT)
+    BSP_Timer_Pause(&_timer_frame_detect);
+#endif
     BSP_UART_ClearUserBuff((BSP_UART_ID)xfer->if_id);
 }
 
 
 /* Private functions ---------------------------------------------------------*/
+#if (DT_ENABLE_BROKEN_FRAME_DETECT)
 /**
  * @brief  数据帧检测超时处理回调函数
  * @note   
@@ -115,6 +144,8 @@ inline void DT_Port_ClearRecvBuff(struct DATA_TRANSFER *xfer)
  */
 static void _Timeout_FrameDetect(void *user_data)
 {
+    _timeout_flag = 1;
     BSP_Printf("frame detect clock time up!\r\n");
 }
+#endif
 

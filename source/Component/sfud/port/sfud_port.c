@@ -31,7 +31,7 @@
 //#include <rthw.h>
 //#include <rtthread.h>
 /* User Add */
-#include "stm32f1xx_hal.h"
+//#include "stm32f1xx_hal.h"
 #include "bsp_common.h"
 
 typedef struct {

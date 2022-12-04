@@ -29,7 +29,16 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         1. 增加一个记录版本的机制，可选写在 APP 分区
+ *                             2. 修复 AC6 -O0 优化下，无法正常运行 APP 的问题
+ *                             3. 增加长按按键恢复出厂固件的选项
+ *                             4. 将 flash 的擦除粒度配置移至 user_config.h 
+ *                             5. 增加 Main_Satrt() 函数
+ *                             6. 增加是否判断固件包超过分区大小的选项
  */
 
 
@@ -55,13 +64,19 @@
 
 static uint8_t  _is_firmware_head;                          /* 是否为固件包头的标志位 */
 static uint16_t _dev_rx_len;                                /* 指示缓存区接收到的数据量，单位 byte */
-static uint8_t  _dev_rx_buff[PP_MSG_BUFF_SIZE];             /* 设备底层数据接收缓存区 */
+static uint8_t  _dev_rx_buff[PP_MSG_BUFF_SIZE + 16];        /* 设备底层数据接收缓存区 */
 static uint8_t  _fw_head_data[FPK_HEAD_SIZE];               /* 用于暂存固件包头 */
 static uint8_t  _fw_sub_pkg_data[PP_FIRMWARE_PKG_SIZE];     /* 暂存固件包体 */
-static uint16_t _fw_sub_pkg_len;                            /* 记录固件包体大小，包含两个字节的数据长度 */   
+static uint16_t _fw_sub_pkg_len;                            /* 记录固件包体大小，包含两个字节的数据长度 */
+static uint32_t _stack_addr;                                /* APP 栈顶地址 */
+static uint32_t _reset_handler;                             /* APP reset handler 地址 */
 
 static struct BSP_TIMER _timer_led;                         /* LED 的闪烁 timer */
 static struct BSP_TIMER _timer_wait_data;                   /* 检测主机数据发送超时的 timer */
+#if (ENABLE_FACTORY_FIRMWARE_BUTTON)
+static struct BSP_TIMER _timer_key;                         /* 用于按键扫描的 timer */
+static struct BSP_KEY   _recovery_key;                      /* 用于恢复出厂固件的按键 */  
+#endif
 
 static struct DATA_TRANSFER         _data_if;               /* 数据传输的接口 */
 static struct FIRMWARE_UPDATE_INFO  _fw_update_info;        /* 固件更新的信息记录 */
@@ -81,9 +96,28 @@ static uint8_t      _Firmware_Check                 (void);
 static void         _Firmware_CheckAndHandle        (void);
 static FM_ERR_CODE  _Firmware_AutoUpdate            (const char *part_name);
 #endif
+#if (ENABLE_FACTORY_FIRMWARE_BUTTON)
+static uint8_t      _Key_GetLevel                   (void);
+static void         _Key_EventCallback              (uint8_t id, KEY_EVENT  event);
+static void         _Timer_ScanKeyCallback          (void *user_data);
+#endif
 
 
 /* Exported functions ---------------------------------------------------------*/
+/**
+ * @brief  进入 main 函数后需要立即执行的代码
+ * @note   
+ * @retval None
+ */
+void Main_Start(void)
+{
+#if (USING_IS_NEED_UPDATE_PROJECT == USING_APP_SET_FLAG_UPDATE)
+    if (update_flag == BOOTLOADER_RESET_MAGIC_WORD)
+        _Bootloader_JumpToAPP();
+#endif
+}
+
+
 /**
  * @brief  外设初始化前的一些处理
  * @note   执行到此处，内核时钟已初始化
@@ -99,10 +133,6 @@ void System_Init(void)
     {
         if (update_flag == FIRMWARE_RECOVERY_MAGIC_WORD)
             _Bootloader_SetExeFlow(EXE_FLOW_RECOVERY);
-
-        else if (update_flag == BOOTLOADER_RESET_MAGIC_WORD)
-            _Bootloader_JumpToAPP();
-
         else
             _Bootloader_SetExeFlow(EXE_FLOW_FIND_RUNNING_FIRMWARE);
     }
@@ -153,11 +183,24 @@ void APP_Init(void)
 
     BSP_Printf("[OTA Component] DinoHaw\r\n");
     BSP_Printf("UID: %.8X %.8X %.8X\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
-    BSP_Printf("APP Version: V%d.%d\r\n", BOOT_VERSION_MAIN, BOOT_VERSION_SUB);
+    BSP_Printf("bootloader Version: V%d.%d\r\n", BOOT_VERSION_MAIN, BOOT_VERSION_SUB);
     BSP_Printf("HAL Version: V%d.%d.%d.%d\r\n", (hal_version >> 24), (uint8_t)(hal_version >> 16), (uint8_t)(hal_version >> 8), (uint8_t)hal_version);
     #if (ENABLE_SPI_FLASH)
     BSP_Printf("FAL Version: V%s\r\n", FAL_SW_VERSION);
     #endif
+#endif
+
+#if (ENABLE_FACTORY_FIRMWARE_BUTTON)
+    BSP_Key_Init(&_recovery_key, 0, _Key_GetLevel, FACTORY_FIRMWARE_BUTTON_PRESS);
+    BSP_Key_Register(&_recovery_key, KEY_LONG_PRESS, _Key_EventCallback);
+    BSP_Key_Start(&_recovery_key);
+    
+    BSP_Timer_Init( &_timer_key, 
+                    _Timer_ScanKeyCallback, 
+                    2,
+                    TIMER_RUN_FOREVER, 
+                    TIMER_TYPE_HARDWARE);
+    BSP_Timer_Start(&_timer_key);
 #endif
     
     /* BSP 初始化 */
@@ -177,9 +220,9 @@ void APP_Init(void)
                     TIMER_TYPE_HARDWARE);
     BSP_Timer_Start(&_timer_wait_data);
 #endif
-    
+
     /* 软件初始化 */
-    DT_Init(&_data_if, BSP_UART1, _dev_rx_buff, &_dev_rx_len, PP_MSG_BUFF_SIZE);
+    DT_Init(&_data_if, BSP_UART2, _dev_rx_buff, &_dev_rx_len, PP_MSG_BUFF_SIZE + 16);
     PP_Init(_UART_SendData, NULL, _Bootloader_ProtocolDataHandle, _Bootloader_SetReplyInfo);
     FM_Init();
 }
@@ -205,14 +248,14 @@ void APP_Running(void)
         /* 应用执行流程状态机 */
         switch (_fw_update_info.exe_flow)
         {
-            #if (USING_PART_PROJECT > ONE_PART_PROJECT)
+        #if (USING_PART_PROJECT > ONE_PART_PROJECT)
             /* 无须更新固件 或 更新固件过程中等待主机指令超时 或 更新失败时 的处理逻辑 */
             case EXE_FLOW_FIND_RUNNING_FIRMWARE:
             {
                 _Firmware_CheckAndHandle();
                 break;
             }
-            #else
+        #else
             case EXE_FLOW_FIND_RUNNING_FIRMWARE:
             case EXE_FLOW_JUMP_TO_APP:
             {
@@ -222,61 +265,91 @@ void APP_Running(void)
                     _Bootloader_SetExeFlow(EXE_FLOW_NEED_HOST_SEND_FIRMWARE);
                 break;
             }
-            #endif
+        #endif
             /* 暂存和校验固件包头的流程，此时，已进入固件更新的开始阶段 */
             case EXE_FLOW_VERIFY_FIRMWARE_HEAD:
             {
                 _fw_update_info.cmd_exe_err_code = PP_ERR_OK;
-            #if (USING_PART_PROJECT == ONE_PART_PROJECT)
-                /* 因单分区的方案无视固件包指定的分区，因此不需要判断分区存不存在 */
-                _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_StorageFirmwareHead(APP_PART_NAME, _fw_head_data);
-            #else
+                
                 /* 取出固件包头中的分区名 */
                 struct FPK_HEAD *p_fpk_head = (struct FPK_HEAD *)_fw_head_data;
                 part_name = p_fpk_head->part_name;
-                
+
+            #if (USING_PART_PROJECT > ONE_PART_PROJECT)
                 #if (ENABLE_AUTO_CORRECT_PART)
-                    /* 自动将固件包指定的 APP 分区修正为 download 分区 */
-                    if (strncmp(part_name, APP_PART_NAME, MAX_NAME_LEN) == 0)
-                        part_name = DOWNLOAD_PART_NAME;
+                /* 自动将固件包指定的 APP 分区修正为 download 分区 */
+                if (strncmp(part_name, APP_PART_NAME, MAX_NAME_LEN) == 0)
+                    part_name = DOWNLOAD_PART_NAME;
                 #else
-                    /* 固件包指定的存放分区合法性检查，多分区方案时，不能指定放在 APP 分区 */
-                    if (strncmp(part_name, APP_PART_NAME, MAX_NAME_LEN) == 0)
-                    {
-                        _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
-                        _fw_update_info.cmd_exe_result   = PP_RESULT_CANCEL;
-                        _fw_update_info.cmd_exe_err_code = PP_ERR_CAN_NOT_PLACE_IN_APP;
-                        break;
-                    }
-                #endif
-                /* 检查 download 分区是否存在 */
-                if (strncmp(part_name, DOWNLOAD_PART_NAME, MAX_NAME_LEN) == 0
-                &&  DOWNLOAD_PART_SIZE == 0)
+                /* 固件包指定的存放分区合法性检查，多分区方案时，不能指定放在 APP 分区 */
+                if (strncmp(part_name, APP_PART_NAME, MAX_NAME_LEN) == 0)
                 {
                     _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
                     _fw_update_info.cmd_exe_result   = PP_RESULT_CANCEL;
-                    _fw_update_info.cmd_exe_err_code = PP_ERR_DOES_NOT_EXIST_DOWNLOAD;
+                    _fw_update_info.cmd_exe_err_code = PP_ERR_CAN_NOT_PLACE_IN_APP;
                     break;
                 }
-                /* 检查 factory 分区是否存在 */
-                if (strncmp(part_name, FACTORY_PART_NAME, MAX_NAME_LEN) == 0)
+                #endif
+            #endif
+                
+                /* 检测固件包是否超过了分区大小 */
+            #if (ENABLE_CHECK_FIRMWARE_SIZE)
+                #if (USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
+                if (p_fpk_head->raw_size > (APP_PART_SIZE - FPK_VERSION_SIZE))
+                #else
+                if (p_fpk_head->raw_size > APP_PART_SIZE)
+                #endif
                 {
-                #if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
-                    if (FACTORY_PART_SIZE == 0)
+                    _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
+                    _fw_update_info.cmd_exe_result   = PP_RESULT_CANCEL;
+                    _fw_update_info.cmd_exe_err_code = PP_ERR_FIRMWARE_OVERSIZE;
+                    break;
+                }
+                
+                #if (USING_PART_PROJECT == DOUBLE_PART_PROJECT)
+                if (p_fpk_head->pkg_size > DOWNLOAD_PART_SIZE)
+                {
+                    _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
+                    _fw_update_info.cmd_exe_result   = PP_RESULT_CANCEL;
+                    _fw_update_info.cmd_exe_err_code = PP_ERR_FIRMWARE_OVERSIZE;
+                    break;
+                }
+                #elif (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
+                if (strncmp(part_name, DOWNLOAD_PART_NAME, MAX_NAME_LEN) == 0)
+                {
+                    if (p_fpk_head->pkg_size > DOWNLOAD_PART_SIZE)
                     {
                         _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
                         _fw_update_info.cmd_exe_result   = PP_RESULT_CANCEL;
-                        _fw_update_info.cmd_exe_err_code = PP_ERR_DOES_NOT_EXIST_FACTORY;
+                        _fw_update_info.cmd_exe_err_code = PP_ERR_FIRMWARE_OVERSIZE;
                         break;
                     }
-                #else
+                }
+                else if (strncmp(part_name, FACTORY_PART_NAME, MAX_NAME_LEN) == 0)
+                {
+                    #if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
+                    if (p_fpk_head->pkg_size > FACTORY_PART_SIZE)
+                    {
+                        _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
+                        _fw_update_info.cmd_exe_result   = PP_RESULT_CANCEL;
+                        _fw_update_info.cmd_exe_err_code = PP_ERR_FIRMWARE_OVERSIZE;
+                        break;
+                    }
+                    #else
                     /* 双分区的方案不可能存在 factory 分区 */
                     _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
                     _fw_update_info.cmd_exe_result   = PP_RESULT_CANCEL;
                     _fw_update_info.cmd_exe_err_code = PP_ERR_DOES_NOT_EXIST_FACTORY;
                     break;
-                #endif
+                    #endif
                 }
+                #endif
+            #endif  /* #if (ENABLE_CHECK_FIRMWARE_SIZE) */
+                
+            #if (USING_PART_PROJECT == ONE_PART_PROJECT)
+                /* 因单分区的方案无视固件包指定的分区，因此不需要判断分区存不存在 */
+                _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_StorageFirmwareHead(APP_PART_NAME, _fw_head_data);
+            #else  
                 /* 暂存固件包头 */
                 _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_StorageFirmwareHead(part_name, _fw_head_data);
             #endif
@@ -418,7 +491,7 @@ void APP_Running(void)
                 part_name = FM_GetPartName();
                 
                 #if (ENABLE_AUTO_CORRECT_PART)
-                    /* 自动将固件包指定的app分区修正为 download 分区 */
+                    /* 自动将固件包指定的 APP 分区修正为 download 分区 */
                     if (strncmp(part_name, APP_PART_NAME, MAX_NAME_LEN) == 0)
                         part_name = DOWNLOAD_PART_NAME;
                 #else
@@ -529,6 +602,17 @@ void APP_Running(void)
             /* 校验 APP 分区固件通过后，将剩余数据写入 */
             case EXE_FLOW_UPDATE_TO_APP_DONE:
             {
+            #if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT ||   \
+                 USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
+                /* 更新记录的固件版本 */
+                _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_UpdateFirmwareVersion(part_name);
+                if (_fw_update_info.cmd_exe_err_code != FM_ERR_OK)
+                {
+                    _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
+                    _fw_update_info.cmd_exe_result = PP_RESULT_CANCEL;
+                }
+            #endif
+                
                 _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_WriteFirmwareDone(APP_PART_NAME);
                 if (_fw_update_info.cmd_exe_err_code == FM_ERR_OK)
                 {
@@ -596,8 +680,8 @@ void APP_Running(void)
                 _fw_update_info.cmd_exe_result   = PP_RESULT_FAILED;
                 _fw_update_info.cmd_exe_err_code = PP_ERR_DOES_NOT_EXIST_FACTORY;
             #else
-                uint8_t fw_sta = _Firmware_Check();
-                if ((fw_sta & 0x01) == 0)
+                /* 检测 factory 是否有可用的固件 */
+                if ((_Firmware_Check() & 0x01) == 0)
                 {
                 #if (FACTORY_NO_FIRMWARE_SOLUTION == JUMP_TO_APP)
                     _Bootloader_SetExeFlow(EXE_FLOW_FIND_RUNNING_FIRMWARE);
@@ -857,8 +941,19 @@ static FM_ERR_CODE  _Firmware_AutoUpdate(const char *part_name)
         return result;
     }
     
+#if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT ||   \
+     USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
+    /* 记录固件版本在 flash 的方案，需更新记录的固件版本 */
+    result = FM_UpdateFirmwareVersion(part_name);
+#endif
+
     /* 将剩余的数据写入 APP 分区 */
     result = FM_WriteFirmwareDone(APP_PART_NAME);
+    
+#if (USING_AUTO_UPDATE_PROJECT == ERASE_DOWNLOAD_PART_PROJECT)
+    /* 擦除 download 分区的方案，需直接擦除 */
+    result = FM_EraseFirmware(part_name);
+#endif
     
     if (result != FM_ERR_OK)
         BSP_Printf("%s: err: %d\r\n", __func__, __LINE__);
@@ -900,7 +995,8 @@ static void _Firmware_CheckAndHandle(void)
         }
         else
             goto __jump_to_app;
-    #elif (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
+    #elif (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT || \
+           USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
         /* 本方案是检测 download 分区固件包头的版本信息，以判断是否需要自动更新 */
         /* 读固件包头 */
         _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_ReadFirmwareHead(DOWNLOAD_PART_NAME);
@@ -1165,8 +1261,8 @@ static void _Bootloader_JumpToAPP(void)
         typedef void(*APP_MAIN_FUNC)(void);
         APP_MAIN_FUNC  APP_Main; 
         
-        uint32_t stack_addr    = *(volatile uint32_t *)APP_ADDRESS;
-        uint32_t reset_handler = *(volatile uint32_t *)(APP_ADDRESS + 4);
+        _stack_addr    = *(volatile uint32_t *)APP_ADDRESS;
+        _reset_handler = *(volatile uint32_t *)(APP_ADDRESS + 4);
         
         /* 关闭全局中断 */
         BSP_INT_DIS();
@@ -1175,10 +1271,16 @@ static void _Bootloader_JumpToAPP(void)
         update_flag = 0;
         
         /* 设置主堆栈指针 */
-        __set_MSP(stack_addr);
+        __set_MSP(_stack_addr);
         
+        /* 在 RTOS 工程，这条语句很重要，设置为特权级模式，使用 MSP 指针 */
+        __set_CONTROL(0);
+        
+        /* 设置中断向量表 */
+        SCB->VTOR = APP_ADDRESS;
+
         /* 跳转到 APP ，首地址是 MSP ，地址 +4 是复位中断服务程序地址 */
-        APP_Main = (APP_MAIN_FUNC)reset_handler;
+        APP_Main = (APP_MAIN_FUNC)_reset_handler;
         APP_Main();
     }
     /* 首次进入设置标志位并复位 */
@@ -1226,6 +1328,9 @@ static void _Bootloader_JumpToAPP(void)
 
     /* 在 RTOS 工程，这条语句很重要，设置为特权级模式，使用 MSP 指针 */
     __set_CONTROL(0);
+    
+    /* 设置中断向量表 */
+    SCB->VTOR = APP_ADDRESS;
 
     /* 跳转到 APP ，首地址是 MSP ，地址 +4 是复位中断服务程序地址 */
     APP_Main = (APP_MAIN_FUNC)reset_handler;
@@ -1241,6 +1346,56 @@ static void _Bootloader_JumpToAPP(void)
 }
 
 
+#if (ENABLE_FACTORY_FIRMWARE_BUTTON)
+/**
+ * @brief  按键的事件处理
+ * @note   
+ * @param[in]  id: 按键的 ID
+ * @param[in]  event: 按键的事件
+ * @retval None
+ */
+static void _Key_EventCallback(uint8_t id, KEY_EVENT  event)
+{
+    BSP_Printf("[ key ] You just press the button[%d], event: %d\r\n\r\n", id, event);
+    
+    if (event == KEY_LONG_PRESS)
+    {
+        if (_fw_update_info.exe_flow == EXE_FLOW_NOTHING
+        ||  _fw_update_info.exe_flow == EXE_FLOW_NEED_HOST_SEND_FIRMWARE
+        ||  _fw_update_info.exe_flow == EXE_FLOW_FIND_RUNNING_FIRMWARE
+        ||  _fw_update_info.exe_flow == EXE_FLOW_JUMP_TO_APP
+        ||  _fw_update_info.exe_flow == EXE_FLOW_FAILED)
+        {
+            _Bootloader_SetExeFlow(EXE_FLOW_RECOVERY);
+        }
+    }
+}
+
+
+/**
+ * @brief  读取按键的电平值
+ * @note   
+ * @retval 电平值
+ */
+static uint8_t _Key_GetLevel(void)
+{
+    return HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin);
+}
+
+
+/**
+ * @brief  扫描按键的任务
+ * @note   
+ * @param[in]  user_data: 用户数据
+ * @retval None
+ */
+static void _Timer_ScanKeyCallback(void *user_data)
+{
+    BSP_Key_Handler(2);
+}
+#endif  /* #if (ENABLE_FACTORY_FIRMWARE_BUTTON) */
+
+
 /**
  * @brief  LED 闪烁周期任务
  * @note   
@@ -1249,7 +1404,7 @@ static void _Bootloader_JumpToAPP(void)
  */
 static void _Timer_LedFlashCallback(void *user_data)
 {
-    HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
+    HAL_GPIO_TogglePin(G_LED_GPIO_Port, G_LED_Pin);
 }
 
 

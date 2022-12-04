@@ -1,6 +1,6 @@
 /**
- * \file            bsp_config.h
- * \brief           the configuration file of BSP
+ * \file            bsp_gpio.h
+ * \brief           gpio driver
  */
 
 /*
@@ -32,22 +32,38 @@
  * Version:         v1.0.0
  */
 
-#ifndef __BSP_CONFIG_H__
-#define __BSP_CONFIG_H__
+#ifndef __BSP_GPIO_H__
+#define __BSP_GPIO_H__
 
-/* UART相关 */
-#define BSP_PRINTF_BUFF_SIZE                256                 /* BSP_Print的临时缓存区大小 */
-#define BSP_PRINTF_HANDLE                   UART(1)             /* 用于执行BSP_Print的UART句柄 */
+#include "bsp_common.h"
 
-#define BSP_UART_BUFF_SIZE                  64                 /* UART数据一级缓存的大小 */
+#define GPIO_LOW                    0x00
+#define GPIO_HIGH                   0x01
 
-#define BSP_USING_UART1                     1
-#define BSP_USING_UART2                     1
-#define BSP_USING_UART2_RE                  0
-#define BSP_USING_UART3                     0
-#define BSP_USING_UART3_RE                  0
-#define BSP_USING_UART4                     0
-#define BSP_USING_UART5                     0
-#define BSP_USING_UART6                     0
+#define STM32_PORT(port)            GPIO##port##_BASE
+
+#define GET_PIN(port, pin)          (uint32_t)((16 * ( ((uint32_t)STM32_PORT(port) - (uint32_t)GPIOA_BASE)/(0x0400UL) )) + pin)
+
+#define STM32_PIN(index, gpio, gpio_index)          \
+{                                                   \
+    index, GPIO##gpio, GPIO_PIN_##gpio_index        \
+}
+
+/* STM32 GPIO driver */
+struct GPIO_INDEX
+{
+    int index;
+    GPIO_TypeDef *gpio;
+    uint16_t pin;
+};
+
+void            BSP_GPIO_Write      (uint8_t io, uint8_t level);
+uint8_t         BSP_GPIO_Read       (uint8_t io);
+void            BSP_GPIO_Toggle     (uint8_t io);
+void            BSP_GPIO_SetMode    (uint8_t io, uint32_t mode, uint32_t pull);
+
+GPIO_TypeDef *  BSP_GPIO_GetPort    (uint8_t io);
+uint16_t        BSP_GPIO_GetPin     (uint8_t io);
 
 #endif
+

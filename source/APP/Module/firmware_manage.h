@@ -72,6 +72,9 @@ typedef enum
     FM_ERR_FAULT_FIRMWARE               = 0x16,             /* 错误的固件包 */
     FM_ERR_NO_DECRYPT_COMPONENT         = 0x1A,             /* 从机没有解密组件，无法解密 */
     FM_ERR_DECRYPT_ERR                  = 0x1B,             /* 固件解密失败 */
+    FM_ERR_READ_VER_ERR                 = 0x1C,             /* 读取固件的版本失败 */
+    FM_ERR_WRITE_VER_ERR                = 0x1D,             /* 固件的版本写入 APP 分区失败 */
+    FM_ERR_VER_AREA_NO_ERASE            = 0x1E,             /* APP 分区的固件版本区域没有擦除 */
 
 } FM_ERR_CODE;
 
@@ -123,7 +126,8 @@ char *          FM_GetOldFirmwareVersion    (void);
 uint32_t        FM_GetPackageCRC32          (void);
 FM_ERR_CODE     FM_ReadFirmwareHead         (const char *part_name);
 FM_ERR_CODE     FM_UpdateToAPP              (const char *from_part_name);
-#if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
+#if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT ||   \
+     USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
 FM_ERR_CODE     FM_UpdateFirmwareVersion    (const char *part_name);
 #endif
 #endif

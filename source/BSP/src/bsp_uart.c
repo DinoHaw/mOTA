@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-04     Dino         优化中断开关
  */
 
 
@@ -166,16 +170,16 @@ BSP_UART_ERR  BSP_UART_IsFrameEnd(BSP_UART_ID  id)
     if (uart == NULL)  
         return BSP_UART_ERR_NOT_FOUND; 
 
-    BSP_INT_DIS();
+//    BSP_INT_DIS();
     if (uart->idle_flag == 0)
     {    
-        BSP_INT_EN();
+//        BSP_INT_EN();
         return BSP_UART_ERR_NO_RECV_FRAME;
     }
     else
     {
         uart->idle_flag = 0;
-        BSP_INT_EN();
+//        BSP_INT_EN();
         return BSP_UART_ERR_OK;
     }
 }
