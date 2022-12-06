@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.1
+ * Version:         v1.0.2
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -37,6 +37,7 @@
  *                             2. 增加长按按键恢复出厂固件的选项
  *                             3. 将 flash 的擦除粒度配置移至 user_config.h 
  *                             4. 增加是否判断固件包超过分区大小的选项
+ * 2022-12-07     Dino         增加 ONCHIP_FLASH_ONCE_WRITE_BYTE 配置项
  */
 
 /**
@@ -90,6 +91,15 @@
     #define AES256_KEY                      "0123456789ABCDEF0123456789ABCDEF"  /* 必须等于 32 字节 */
     #define AES256_IV                       "0123456789ABCDEF"                  /* 必须等于 16 字节 */
     #endif
+
+
+/**
+ * 【片内 flash 一次写入的最小字节数】
+ * 说明：
+ *    每个 MCU 内部 flash 单次可以写入的字节数有所不同，因此提供本选项用于配置，单位是 byte
+ *    该值的大小由内部 flash 的操作接口决定，默认是 4 byte ，不能随意配置，需要清楚本选项意味着什么
+ */
+#define ONCHIP_FLASH_ONCE_WRITE_BYTE        4
 
 
 /**

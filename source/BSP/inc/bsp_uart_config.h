@@ -47,6 +47,9 @@
 #define UART2_DMA_RX_IRQHandler         DMA1_Channel6_IRQHandler
 #define UART3_DMA_RX_IRQHandler         DMA1_Channel3_IRQHandler
 #define UART4_DMA_RX_IRQHandler         DMA2_Channel3_IRQHandler
+#elif defined(STM32L475xx)
+#define UART1_DMA_RX_IRQHandler         DMA1_Channel5_IRQHandler
+#define UART1_DMA_TX_IRQHandler         DMA1_Channel4_IRQHandler
 #endif
 
 #endif

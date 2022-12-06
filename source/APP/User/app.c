@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.1
+ * Version:         v1.0.2
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -39,6 +39,7 @@
  *                             4. 将 flash 的擦除粒度配置移至 user_config.h 
  *                             5. 增加 Main_Satrt() 函数
  *                             6. 增加是否判断固件包超过分区大小的选项
+ * 2022-12-07     Dino         增加对 STM32L4 的支持
  */
 
 
@@ -106,7 +107,7 @@ static void         _Timer_ScanKeyCallback          (void *user_data);
 /* Exported functions ---------------------------------------------------------*/
 /**
  * @brief  进入 main 函数后需要立即执行的代码
- * @note   
+ * @note   为了最大程度的减少对 APP 的影响，更建议放在 SystemInit() 函数第一行执行
  * @retval None
  */
 void Main_Start(void)
@@ -376,11 +377,11 @@ void APP_Running(void)
                 if (_fw_update_info.cmd_exe_err_code == FM_ERR_OK)
                 {
                 #if (USING_PART_PROJECT == ONE_PART_PROJECT)
+                    _fw_update_info.cmd_exe_result = PP_RESULT_OK;
                     _Bootloader_SetExeFlow(EXE_FLOW_ERASE_OLD_FIRMWARE_DONE);
                 #else
                     _Bootloader_SetExeFlow(EXE_FLOW_WRITE_FIRMWARE_HEAD);
                 #endif
-                    _fw_update_info.cmd_exe_result = PP_RESULT_OK;
                     break;
                 }
                 else if (_fw_update_info.cmd_exe_err_code != FM_ERR_FLASH_NO_EMPTY)
@@ -399,11 +400,11 @@ void APP_Running(void)
                 if (_fw_update_info.cmd_exe_err_code == FM_ERR_OK)
                 {
                 #if (USING_PART_PROJECT == ONE_PART_PROJECT)
+                    _fw_update_info.cmd_exe_result = PP_RESULT_OK;
                     _Bootloader_SetExeFlow(EXE_FLOW_ERASE_OLD_FIRMWARE_DONE);
                 #else
                     _Bootloader_SetExeFlow(EXE_FLOW_WRITE_FIRMWARE_HEAD);
                 #endif
-                    _fw_update_info.cmd_exe_result = PP_RESULT_OK;
                 }
                 else
                 {
@@ -636,8 +637,6 @@ void APP_Running(void)
                 {
                 #if (USING_AUTO_UPDATE_PROJECT == ERASE_DOWNLOAD_PART_PROJECT)
                     _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_EraseFirmware(part_name);
-                #elif (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
-                    _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_UpdateFirmwareVersion(part_name);
                 #else
                     _fw_update_info.cmd_exe_err_code = PP_ERR_OK;
                 #endif
@@ -714,6 +713,7 @@ void APP_Running(void)
             case EXE_FLOW_FAILED:
             {
                 _is_firmware_head      = 0;
+                _fw_update_info.start  = 0;
                 _fw_update_info.step   = STEP_VERIFY_FIRMWARE;
                 _fw_update_info.status = BOOT_STATUS_UPDATE_FAILED;
                 _Bootloader_SetExeFlow(EXE_FLOW_NOTHING);
