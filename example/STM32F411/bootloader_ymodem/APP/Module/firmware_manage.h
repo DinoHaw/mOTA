@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-07     Dino         修复 STM32L4 写入 flash 的最小单位问题
  */
 
 #ifndef __FIRMWARE_MANAGE_H__

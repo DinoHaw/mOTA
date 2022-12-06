@@ -92,7 +92,7 @@ int BSP_Flash_Read(const struct BSP_FLASH *part, uint32_t relative_addr, uint8_t
 
 /**
  * @brief  写内部 flash
- * @note   
+ * @note   传入的 buff 至少是 flash 最小写入 byte 的整数倍，否则会发生数组溢出
  * @param[in]  part: flash 分区对象
  * @param[in]  relative_addr: 写入的相对地址
  * @param[in]  buff: 要写入的数据

@@ -29,7 +29,11 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-07     Dino         ÐÞ¸´ STM32L4 Ð´Èë flash µÄ×îÐ¡µ¥Î»ÎÊÌâ
  */
 
 
@@ -44,7 +48,7 @@ static uint16_t _update_progress_step_num;                      /* ¹Ì¼þ¸üÐÂ½ø¶Èµ
 static uint16_t _storage_data_size;                             /* ¹Ì¼þ°üÐ´ÈëÊ±¼ÇÂ¼ÔÝ´æµÄ¹Ì¼þ·Ö°ü´óÐ¡£¬µ¥Î» byte */
 static uint32_t _write_part_addr;                               /* ¹Ì¼þ°üÐ´ÈëÊ±¼ÇÂ¼Ð´Èë flash µÄÏà¶ÔµØÖ· */
 static uint16_t _write_last_pkg_size;                           /* ¹Ì¼þ°üÐ´ÈëÊ±×îºóÒ»¸ö·Ö°üµÄ´óÐ¡£¬µ¥Î» byte */
-static uint8_t  _fw_first_4byte[4];                             /* ¹Ì¼þ°üµÄÇ° 4 ¸ö×Ö½Ú */
+static uint8_t  _fw_first_bytes[ONCHIP_FLASH_ONCE_WRITE_BYTE];  /* ¹Ì¼þ°üµÄÇ°¼¸¸ö×Ö½Ú */
 static uint8_t  _fpk_min_handle_buff[FPK_LEAST_HANDLE_BYTE];    /* fpk ¹Ì¼þ×îÐ¡´¦Àíµ¥Î»µÄ»º´æÇø£¬¶à´ÎÊ¹ÓÃÒÔ½µµÍÏµÍ³×ÊÔ´¿ªÏú */
 static struct FPK_HEAD  _fpk_head;                              /* ÓÃÓÚ´æ·Å fpk ¹Ì¼þ°üÍ· */
 #if (ENABLE_DECRYPT)
@@ -405,11 +409,13 @@ FM_ERR_CODE  FM_VerifyFirmware(const char *part_name, uint32_t crc32, uint8_t is
             if (first_flag == 0)
             {
                 first_flag = 1;
-                _fpk_min_handle_buff[0] = _fw_first_4byte[0];
-                _fpk_min_handle_buff[1] = _fw_first_4byte[1];
-                _fpk_min_handle_buff[2] = _fw_first_4byte[2];
-                _fpk_min_handle_buff[3] = _fw_first_4byte[3];
-                BSP_Printf("_fw_first_4byte: %.2X %.2X %.2X %.2X\r\n", _fw_first_4byte[0], _fw_first_4byte[1], _fw_first_4byte[2], _fw_first_4byte[3]);
+                BSP_Printf("_fw_first_bytes: ");
+                for (uint8_t i = 0; i < ONCHIP_FLASH_ONCE_WRITE_BYTE; i++)
+                {
+                    _fpk_min_handle_buff[i] = _fw_first_bytes[i];
+                    BSP_Printf("%.2X ", _fw_first_bytes[i]);
+                }
+                BSP_Printf("\r\n");
             }
         }
     #endif
@@ -475,8 +481,8 @@ FM_ERR_CODE  FM_EraseFirmware(const char *part_name)
 
 
 /**
- * @brief  ¹Ì¼þÐ´Èë·ÖÇøµÄ×îÖÕ½×¶Î£¬½«·ÖÇøÊ×µØÖ·µÄ 4 ¸ö×Ö½ÚÊý¾ÝÐ´Èë flash
- * @note   ³ÌÐòµ÷ÓÃ _Write_FirmwareSubPackage º¯ÊýÊ±ÒÑÔÝ´æ½ø _fw_first_4byte
+ * @brief  ¹Ì¼þÐ´Èë·ÖÇøµÄ×îÖÕ½×¶Î£¬½«·ÖÇøÊ×µØÖ·µÄ¼¸¸ö×Ö½ÚÊý¾ÝÐ´Èë flash
+ * @note   ³ÌÐòµ÷ÓÃ _Write_FirmwareSubPackage º¯ÊýÊ±ÒÑÔÝ´æ½ø _fw_first_bytes
  * @param[in]  part_name: ·ÖÇøÃû³Æ
  * @retval FM_ERR_CODE
  */
@@ -494,7 +500,7 @@ FM_ERR_CODE  FM_WriteFirmwareDone(const char *part_name)
         return FM_ERR_NO_THIS_PART;
     }
 
-    if (fal_partition_write(part, 0, _fw_first_4byte, 4) < 0)
+    if (fal_partition_write(part, 0, _fw_first_bytes, ONCHIP_FLASH_ONCE_WRITE_BYTE) < 0)
 #else
     const struct BSP_FLASH *part = NULL;
     
@@ -505,7 +511,7 @@ FM_ERR_CODE  FM_WriteFirmwareDone(const char *part_name)
         return FM_ERR_NO_THIS_PART;
     }
 
-    if (BSP_Flash_Write(part, 0, _fw_first_4byte, 4) < 0)
+    if (BSP_Flash_Write(part, 0, _fw_first_bytes, ONCHIP_FLASH_ONCE_WRITE_BYTE) < 0)
 #endif
     {
         BSP_Printf("%s: write error (%d).\r\n", __func__, __LINE__);
@@ -564,7 +570,7 @@ FM_ERR_CODE  FM_WriteFirmwareSubPackage(const char *part_name, uint8_t *data, ui
 
 /**
  * @brief  ¼ì²é¹Ì¼þµÄÍêÕûÐÔ
- * @note   Í¨¹ýÊ×µØÖ· 4 ¸ö×Ö½ÚÊý¾Ý×îºóÐ´ÈëµÄ»úÖÆ£¬ÅÐ¶ÏÊ×µØÖ· 4 ¸ö×Ö½ÚÊÇ·ñÓÐÕýÈ·µÄÊý¾Ý
+ * @note   Í¨¹ýÊ×µØÖ·Êý¾Ý×îºóÐ´ÈëµÄ»úÖÆ£¬ÅÐ¶ÏÊ×µØÖ· 4 ¸ö×Ö½ÚÊÇ·ñÓÐÕýÈ·µÄÊý¾Ý
  * @param[in]  addr: ·ÖÇøÊ×µØÖ·
  * @retval FM_ERR_CODE
  */
@@ -684,10 +690,10 @@ inline uint32_t FM_GetPackageCRC32(void)
 //{
 //    uint8_t *p_fpk = (uint8_t *)&_fpk_head;
 //    
-//    _fw_first_4byte[0] = p_fpk[0];
-//    _fw_first_4byte[1] = p_fpk[1];
-//    _fw_first_4byte[2] = p_fpk[2];
-//    _fw_first_4byte[3] = p_fpk[3];
+//    _fw_first_bytes[0] = p_fpk[0];
+//    _fw_first_bytes[1] = p_fpk[1];
+//    _fw_first_bytes[2] = p_fpk[2];
+//    _fw_first_bytes[3] = p_fpk[3];
 //    
 //#if (ENABLE_SPI_FLASH) 
 //    const struct fal_partition *part = NULL;
@@ -1108,16 +1114,15 @@ static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct BSP_FLASH *part,
         AES_CBC_decrypt_buffer(&_aes_ctx, &fw_4096byte_buff[0], _storage_data_size);
 #endif
 
-    /* ±£´æÊ×µØÖ·µÄ 4 ¸ö×Ö½ÚÊý¾Ý£¬µÈ´ý×îºóÐ´Èë */
+    /* ±£´æÊ×µØÖ·µÄ¼¸¸ö×Ö½ÚÊý¾Ý£¬µÈ´ý×îºóÐ´Èë */
     if (_fw_start_write_flag == 0)
     {   
-        _fw_first_4byte[0]  = fw_4096byte_buff[0];
-        _fw_first_4byte[1]  = fw_4096byte_buff[1];
-        _fw_first_4byte[2]  = fw_4096byte_buff[2];
-        _fw_first_4byte[3]  = fw_4096byte_buff[3];
-        fw_4096byte_buff   += 4;
-        _storage_data_size -= 4;
-        _write_part_addr    = 4;
+        for (uint8_t i = 0; i < ONCHIP_FLASH_ONCE_WRITE_BYTE; i++)
+            _fw_first_bytes[i]  = fw_4096byte_buff[i];
+
+        fw_4096byte_buff   += ONCHIP_FLASH_ONCE_WRITE_BYTE;
+        _storage_data_size -= ONCHIP_FLASH_ONCE_WRITE_BYTE;
+        _write_part_addr    = ONCHIP_FLASH_ONCE_WRITE_BYTE;
     }
 
 #if (ENABLE_SPI_FLASH)     
