@@ -99,7 +99,7 @@
  *    每个 MCU 内部 flash 单次可以写入的字节数有所不同，因此提供本选项用于配置，单位是 byte
  *    该值的大小由内部 flash 的操作接口决定，默认是 4 byte ，不能随意配置，需要清楚本选项意味着什么
  */
-#define ONCHIP_FLASH_ONCE_WRITE_BYTE        8
+#define ONCHIP_FLASH_ONCE_WRITE_BYTE        4
 
 
 /**
