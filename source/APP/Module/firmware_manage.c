@@ -29,16 +29,41 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.1
+ * Version:         v1.0.2
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
  * 2022-12-07     Dino         修复 STM32L4 写入 flash 的最小单位问题
+ * 2022-12-10     Dino         增加对 SPI flash 的支持
  */
 
 
 /* Includes ------------------------------------------------------------------*/
 #include "firmware_manage.h"
+
+#if (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH &&    \
+     SPI_FLASH_ERASE_GRANULARITY > FPK_LEAST_HANDLE_BYTE)
+#error "SPI flash erase granularity oversize than _fpk_min_handle_buff array"
+#endif
+
+#if (DOWNLOAD_PART_LOCATION == STORE_IN_ONCHIP_FLASH &&    \
+     ONCHIP_FLASH_ERASE_GRANULARITY > FPK_LEAST_HANDLE_BYTE)
+#error "onchip flash erase granularity oversize than _fpk_min_handle_buff array"
+#endif
+
+#if (IS_ENABLE_SPI_FLASH)
+    #define FLASH_OBEJCT        fal_partition
+    #define GET_FLASH_OBJECT    fal_partition_find
+    #define FLASH_PART_READ     fal_partition_read
+    #define FLASH_PART_WRITE    fal_partition_write
+    #define FLASH_PART_ERASE    fal_partition_erase
+#else
+    #define FLASH_OBEJCT        BSP_FLASH
+    #define GET_FLASH_OBJECT    BSP_Flash_GetHandle
+    #define FLASH_PART_READ     BSP_Flash_Read
+    #define FLASH_PART_WRITE    BSP_Flash_Write
+    #define FLASH_PART_ERASE    BSP_Flash_Erase
+#endif
 
 
 /* Private variables ---------------------------------------------------------*/
@@ -54,7 +79,7 @@ static struct FPK_HEAD  _fpk_head;                              /* 用于存放 fpk 
 #if (ENABLE_DECRYPT)
 static struct AES_ctx  _aes_ctx;                                /* AES 对象 */
 #endif
-#if (ENABLE_SPI_FLASH == 0)
+#if (IS_ENABLE_SPI_FLASH == 0)
 static struct BSP_FLASH _flash_app_part;                        /* APP 分区 */
     #if (USING_PART_PROJECT > ONE_PART_PROJECT)
     static struct BSP_FLASH _flash_download_part;               /* download 分区 */
@@ -70,19 +95,11 @@ extern void Firmware_OperateCallback(uint16_t progress);
 
 
 /* Private function prototypes -----------------------------------------------*/
-#if (ENABLE_SPI_FLASH)
-static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct fal_partition *part, 
+static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct FLASH_OBEJCT *part, 
                                                uint8_t  *data, 
                                                uint16_t pkg_size, 
                                                uint8_t  decrypt,
                                                FM_FIRMWARE_WRITE_DIR  write_dir);
-#else
-static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct BSP_FLASH *part, 
-                                               uint8_t  *data, 
-                                               uint16_t pkg_size, 
-                                               uint8_t  decrypt,
-                                               FM_FIRMWARE_WRITE_DIR  write_dir);
-#endif
 static void _Reset_Write(void);
 
 
@@ -96,7 +113,8 @@ void FM_Init(void)
 {
     /* TODO: 后续考虑用硬件 CRC ，提供配置选项，允许在软件 CRC 和硬件 CRC 之间选择 */
     CRC32_Init();
-#if (ENABLE_SPI_FLASH)
+    
+#if (IS_ENABLE_SPI_FLASH)
     /* FAL 初始化 */
     fal_init();
 #else
@@ -117,6 +135,7 @@ void FM_Init(void)
         #endif
     #endif
 #endif
+
 #if (ENABLE_DECRYPT)
     AES_init_ctx_iv(&_aes_ctx, (uint8_t *)AES256_KEY, (uint8_t *)AES256_IV);
 #endif
@@ -152,37 +171,23 @@ FM_ERR_CODE  FM_IsEmpty(const char *part_name)
     uint32_t read_posit = 0;
     
     ASSERT(part_name != NULL);
+        
+    const struct FLASH_OBEJCT *part = NULL;
     
-#if (ENABLE_SPI_FLASH)     
-    const struct fal_partition *part = NULL;
-    
-    part = fal_partition_find(part_name);
+    part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
     {
         BSP_Printf("%s: not found.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-    if (part == NULL)
-    {
-        BSP_Printf("%s: not found.\r\n", __func__);
-        return FM_ERR_NO_THIS_PART;
-    }
-#endif
     
     for (read_posit = 0; read_posit < part->len; )
     {
         if ((part->len - read_posit) < FPK_LEAST_HANDLE_BYTE)
             need_read_size = part->len - read_posit;
         
-    #if (ENABLE_SPI_FLASH) 
-        read_len = fal_partition_read(part, read_posit, _fpk_min_handle_buff, need_read_size);
-    #else
-        read_len = BSP_Flash_Read(part, read_posit, _fpk_min_handle_buff, need_read_size);
-    #endif
+
+        read_len = FLASH_PART_READ(part, read_posit, _fpk_min_handle_buff, need_read_size);
         if (read_len < 0)
         {
             BSP_Printf("%s: read error (%d).\r\n", __func__, __LINE__);
@@ -238,6 +243,7 @@ FM_ERR_CODE  FM_StorageFirmwareHead(const char *part_name, uint8_t *data)
 {
     uint32_t head_crc = 0;
     uint8_t  *p_fpk_head = (uint8_t *)&_fpk_head;
+    const struct FLASH_OBEJCT *part = NULL;
 
     ASSERT(part_name != NULL);
     ASSERT(data != NULL);
@@ -254,15 +260,7 @@ FM_ERR_CODE  FM_StorageFirmwareHead(const char *part_name, uint8_t *data)
     }
 #endif
 
-#if (ENABLE_SPI_FLASH) 
-    const struct fal_partition *part = NULL;
-    
-    part = fal_partition_find(part_name);
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-#endif
+    part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
     {
         BSP_Printf("%s: not found.\r\n", __func__);
@@ -328,6 +326,7 @@ FM_ERR_CODE  FM_VerifyFirmware(const char *part_name, uint32_t crc32, uint8_t is
 #if (USING_PART_PROJECT > ONE_PART_PROJECT)
     uint8_t  first_flag = 0;
 #endif
+    const struct FLASH_OBEJCT *part = NULL;
     
     ASSERT(part_name != NULL);
 
@@ -342,26 +341,13 @@ FM_ERR_CODE  FM_VerifyFirmware(const char *part_name, uint32_t crc32, uint8_t is
 
     if (strncmp(part_name, APP_PART_NAME, MAX_NAME_LEN) == 0)
         app_part_flag = 1;
-
-#if (ENABLE_SPI_FLASH)     
-    const struct fal_partition *part = NULL;
-    
-    part = fal_partition_find(part_name);
+     
+    part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
     {
         BSP_Printf("%s: not found.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-    if (part == NULL)
-    {
-        BSP_Printf("%s: not found.\r\n", __func__);
-        return FM_ERR_NO_THIS_PART;
-    }
-#endif
 
     BSP_Printf("fpk size: %d byte\r\n", FPK_HEAD_SIZE);
     for (uint8_t i = 0; i < 6; i++)
@@ -391,12 +377,8 @@ FM_ERR_CODE  FM_VerifyFirmware(const char *part_name, uint32_t crc32, uint8_t is
             read_posit_temp = read_posit;
         else
             read_posit_temp = read_posit + FPK_HEAD_SIZE;
-        
-    #if (ENABLE_SPI_FLASH) 
-        read_len = fal_partition_read(part, read_posit_temp, &_fpk_min_handle_buff[0], need_read_size);
-    #else
-        read_len = BSP_Flash_Read(part, read_posit_temp, &_fpk_min_handle_buff[0], need_read_size);
-    #endif
+
+        read_len = FLASH_PART_READ(part, read_posit_temp, &_fpk_min_handle_buff[0], need_read_size);
         if (read_len < 0)
         {
             BSP_Printf("%s: read error (%d).\r\n", __func__, __LINE__);
@@ -448,29 +430,16 @@ FM_ERR_CODE  FM_EraseFirmware(const char *part_name)
 {
     ASSERT(part_name != NULL);
 
-#if (ENABLE_SPI_FLASH) 
-    const struct fal_partition *part = NULL;
+    const struct FLASH_OBEJCT *part = NULL;
     
-    part = fal_partition_find(part_name);
+    part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
     {
         BSP_Printf("%s: not found %s part.\r\n", __func__, part_name);
         return FM_ERR_NO_THIS_PART;
     }
     
-    if (fal_partition_erase(part, 0, part->len) < 0)
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-    if (part == NULL)
-    {
-        BSP_Printf("%s: not found %s part.\r\n", __func__, part_name);
-        return FM_ERR_NO_THIS_PART;
-    }
-    
-    if (BSP_Flash_Erase(part, 0, part->len) < 0)
-#endif
+    if (FLASH_PART_ERASE(part, 0, part->len) < 0)
     {
         BSP_Printf("%s: %s part erase failed.\r\n", __func__, part_name);
         return FM_ERR_ERASE_PART_ERR;
@@ -489,30 +458,17 @@ FM_ERR_CODE  FM_EraseFirmware(const char *part_name)
 FM_ERR_CODE  FM_WriteFirmwareDone(const char *part_name)
 {
     ASSERT(part_name != NULL);
-
-#if (ENABLE_SPI_FLASH)     
-    const struct fal_partition *part = NULL;
     
-    part = fal_partition_find(part_name);
+    const struct FLASH_OBEJCT *part = NULL;
+    
+    part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
     {
         BSP_Printf("%s: not found part.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
 
-    if (fal_partition_write(part, 0, _fw_first_bytes, ONCHIP_FLASH_ONCE_WRITE_BYTE) < 0)
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-    if (part == NULL)
-    {
-        BSP_Printf("%s: not found part.\r\n", __func__);
-        return FM_ERR_NO_THIS_PART;
-    }
-
-    if (BSP_Flash_Write(part, 0, _fw_first_bytes, ONCHIP_FLASH_ONCE_WRITE_BYTE) < 0)
-#endif
+    if (FLASH_PART_WRITE(part, 0, _fw_first_bytes, ONCHIP_FLASH_ONCE_WRITE_BYTE) < 0)
     {
         BSP_Printf("%s: write error (%d).\r\n", __func__, __LINE__);
         return FM_ERR_WRITE_FIRST_ADDR_ERR;
@@ -539,15 +495,9 @@ FM_ERR_CODE  FM_WriteFirmwareSubPackage(const char *part_name, uint8_t *data, ui
     ASSERT(data != NULL);
     ASSERT(pkg_size != 0);
 
-#if (ENABLE_SPI_FLASH)  
-    const struct fal_partition *part = NULL;
+    const struct FLASH_OBEJCT *part = NULL;
     
-    part = fal_partition_find(part_name);
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-#endif
+    part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
     {
         BSP_Printf("%s: not found %s part.\r\n", __func__, part_name);
@@ -578,6 +528,10 @@ FM_ERR_CODE  FM_CheckFirmwareIntegrity(uint32_t addr)
 {
     uint32_t value = *(volatile uint32_t *)addr;
     FM_ERR_CODE  fw_integrity = FM_ERR_JUMP_TO_APP_ERR;
+#if (IS_ENABLE_SPI_FLASH)
+    uint32_t *data = NULL;
+    const struct FLASH_OBEJCT *part = NULL;
+#endif
     
     BSP_Printf("0x%.8X address data: 0x%.8X\r\n", addr, value);
     
@@ -586,12 +540,111 @@ FM_ERR_CODE  FM_CheckFirmwareIntegrity(uint32_t addr)
         fw_integrity = (value & 0x2FF00000) == 0x20000000? FM_ERR_OK : FM_ERR_JUMP_TO_APP_ERR;
     }
 #if (USING_PART_PROJECT > ONE_PART_PROJECT)
+    #if (DOWNLOAD_PART_LOCATION == STORE_IN_ONCHIP_FLASH && FACTORY_PART_LOCATION == STORE_IN_ONCHIP_FLASH)
+    /* download 分区和 factory 分区均在片内 flash */
     else if ((DOWNLOAD_ADDRESS == addr)
     ||       (FACTORY_ADDRESS  == addr))
     {
-        if (FPK_IDENTIFIER == value)
+        if (value == FPK_IDENTIFIER)
             fw_integrity = FM_ERR_OK;
     }
+    #elif (DOWNLOAD_PART_LOCATION == STORE_IN_ONCHIP_FLASH && FACTORY_PART_LOCATION == STORE_IN_SPI_FLASH)
+    /* download 分区在片内 flash ， factory 分区在 SPI flash */
+    else if (DOWNLOAD_ADDRESS == addr)
+    {
+        if (value == FPK_IDENTIFIER)
+            fw_integrity = FM_ERR_OK;
+    }
+    else if (FACTORY_ADDRESS == addr)
+    {
+        part = GET_FLASH_OBJECT(FACTORY_PART_NAME);
+        if (part == NULL)
+        {
+            BSP_Printf("%s: not found factory part.\r\n", __func__);
+            return FM_ERR_NO_THIS_PART;
+        }
+        
+        if (FLASH_PART_READ(part, 0, (uint8_t *)&_fpk_min_handle_buff[0], 4) < 0)
+        {
+            BSP_Printf("%s: read error.\r\n", __func__);
+            return FM_ERR_READ_FLASH_ERR;
+        }
+
+        data = (uint32_t *)_fpk_min_handle_buff;
+
+        if (*data == FPK_IDENTIFIER)
+            fw_integrity = FM_ERR_OK;
+    }
+    #elif (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH && FACTORY_PART_LOCATION == STORE_IN_SPI_FLASH)
+    /* download 分区和 factory 分区均在片内 SPI flash */
+    else if (DOWNLOAD_ADDRESS == addr)
+    {
+        part = GET_FLASH_OBJECT(DOWNLOAD_PART_NAME);
+        if (part == NULL)
+        {
+            BSP_Printf("%s: not found download part.\r\n", __func__);
+            return FM_ERR_NO_THIS_PART;
+        }
+        
+        if (FLASH_PART_READ(part, 0, (uint8_t *)&_fpk_min_handle_buff[0], 4) < 0)
+        {
+            BSP_Printf("%s: read error.\r\n", __func__);
+            return FM_ERR_READ_FLASH_ERR;
+        }
+
+        data = (uint32_t *)_fpk_min_handle_buff;
+
+        if (*data == FPK_IDENTIFIER)
+            fw_integrity = FM_ERR_OK;
+    }
+    else if (FACTORY_ADDRESS == addr)
+    {
+        part = GET_FLASH_OBJECT(FACTORY_PART_NAME);
+        if (part == NULL)
+        {
+            BSP_Printf("%s: not found factory part.\r\n", __func__);
+            return FM_ERR_NO_THIS_PART;
+        }
+        
+        if (FLASH_PART_READ(part, 0, (uint8_t *)&_fpk_min_handle_buff[0], 4) < 0)
+        {
+            BSP_Printf("%s: read error.\r\n", __func__);
+            return FM_ERR_READ_FLASH_ERR;
+        }
+
+        data = (uint32_t *)_fpk_min_handle_buff;
+
+        if (*data == FPK_IDENTIFIER)
+            fw_integrity = FM_ERR_OK;
+    }
+    #else
+    /* download 分区在 SPI flash ， factory 分区在片内 flash */
+    else if (DOWNLOAD_ADDRESS == addr)
+    {
+        part = GET_FLASH_OBJECT(DOWNLOAD_PART_NAME);
+        if (part == NULL)
+        {
+            BSP_Printf("%s: not found download part.\r\n", __func__);
+            return FM_ERR_NO_THIS_PART;
+        }
+        
+        if (FLASH_PART_READ(part, 0, (uint8_t *)&_fpk_min_handle_buff[0], 4) < 0)
+        {
+            BSP_Printf("%s: read error.\r\n", __func__);
+            return FM_ERR_READ_FLASH_ERR;
+        }
+
+        data = (uint32_t *)_fpk_min_handle_buff;
+
+        if (*data == FPK_IDENTIFIER)
+            fw_integrity = FM_ERR_OK;
+    }
+    else if (FACTORY_ADDRESS == addr)
+    {
+        if (value == FPK_IDENTIFIER)
+            fw_integrity = FM_ERR_OK;
+    }
+    #endif
 #endif
     
     return fw_integrity;
@@ -609,22 +662,17 @@ uint8_t FM_IsNeedAutoUpdate(void)
     BSP_Printf("%s\r\n", __func__);
 
 #if (USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
-    #if (ENABLE_SPI_FLASH)  
-    const struct fal_partition *part = NULL;
+
+    const struct FLASH_OBEJCT *part = NULL;
     
-    part = fal_partition_find(APP_PART_NAME);
-    #else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(APP_PART_NAME);
-    #endif
+    part = GET_FLASH_OBJECT(APP_PART_NAME);
     if (part == NULL)
     {
         BSP_Printf("%s: not found app part.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
     
-    if (BSP_Flash_Read(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_old_ver[0], FPK_VERSION_SIZE) < 0)
+    if (FLASH_PART_READ(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_old_ver[0], FPK_VERSION_SIZE) < 0)
     {
         BSP_Printf("%s: read error.\r\n", __func__);
         return FM_ERR_READ_VER_ERR;
@@ -673,59 +721,12 @@ inline char * FM_GetOldFirmwareVersion(void)
 /**
  * @brief  获取打包后固件的 CRC32 值
  * @note   调用前需确保 _fpk_head 已经读入了数据
- * @retval 打包后固件的CRC32值
+ * @retval 打包后固件的 CRC32 值
  */
 inline uint32_t FM_GetPackageCRC32(void)
 {
     return _fpk_head.pkg_crc;
 }
-
-
-/**
- * @brief  将固件包头写入 flash
- * @note   
- * @retval FM_ERR_CODE
- */
-//FM_ERR_CODE  FM_WriteFirmwareHead(const char *part_name)
-//{
-//    uint8_t *p_fpk = (uint8_t *)&_fpk_head;
-//    
-//    _fw_first_bytes[0] = p_fpk[0];
-//    _fw_first_bytes[1] = p_fpk[1];
-//    _fw_first_bytes[2] = p_fpk[2];
-//    _fw_first_bytes[3] = p_fpk[3];
-//    
-//#if (ENABLE_SPI_FLASH) 
-//    const struct fal_partition *part = NULL;
-
-//    part = fal_partition_find(part_name);
-//    if (part == NULL)
-//    {
-//        BSP_Printf("%s: not found.\r\n", __func__);
-//        return FM_ERR_NO_THIS_PART;
-//    }
-
-//    if (fal_partition_write(part, 4, &p_fpk[4], FPK_HEAD_SIZE - 4) < 0)
-//#else
-//    const struct BSP_FLASH *part = NULL;
-//    
-//    part = BSP_Flash_GetHandle(part_name);
-//    if (part == NULL)
-//    {
-//        BSP_Printf("%s: not found.\r\n", __func__);
-//        return FM_ERR_NO_THIS_PART;
-//    }
-//    BSP_Printf("%s: %s part 0x%.8X\r\n", __func__, part_name, part->addr);
-//    
-//    if (BSP_Flash_Write(part, 4, &p_fpk[4], FPK_HEAD_SIZE - 4) < 0)
-//#endif
-//    {
-//        BSP_Printf("%s: write error (%d).\r\n", __func__, __LINE__);
-//        return FM_ERR_WRITE_FLASH_ERR;
-//    }
-//    
-//    return FM_ERR_OK;
-//}
 
 
 /**
@@ -738,30 +739,18 @@ FM_ERR_CODE  FM_ReadFirmwareHead(const char *part_name)
 {
     ASSERT(part_name != NULL);
 
+    const struct FLASH_OBEJCT *part = NULL;
+
     _Reset_Write();
-#if (ENABLE_SPI_FLASH)     
-    const struct fal_partition *part = NULL;
-    
-    part = fal_partition_find(part_name);
+
+    part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
     {
         BSP_Printf("%s: not found.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
     
-    if (fal_partition_read(part, 0, (uint8_t *)&_fpk_head, FPK_HEAD_SIZE) < 0)
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-    if (part == NULL)
-    {
-        BSP_Printf("%s: not found.\r\n", __func__);
-        return FM_ERR_NO_THIS_PART;
-    }
-    
-    if (BSP_Flash_Read(part, 0, (uint8_t *)&_fpk_head, FPK_HEAD_SIZE) < 0)
-#endif
+    if (FLASH_PART_READ(part, 0, (uint8_t *)&_fpk_head, FPK_HEAD_SIZE) < 0)
     {
         BSP_Printf("%s: read error.\r\n", __func__);
         return FM_ERR_READ_FIRMWARE_HEAD_ERR;
@@ -779,40 +768,25 @@ FM_ERR_CODE  FM_ReadFirmwareHead(const char *part_name)
  */
 FM_ERR_CODE  FM_UpdateToAPP(const char *from_part_name)
 {
+    ASSERT(from_part_name != NULL);
+
     int      read_len = 0;
     uint8_t  decrypt = 0;
     uint32_t read_posit = 0;
     uint32_t write_posit = 0;
     uint32_t need_read_size = FPK_LEAST_HANDLE_BYTE;
     FM_ERR_CODE result = FM_ERR_OK;
+    const struct FLASH_OBEJCT *app_part = NULL;
+    const struct FLASH_OBEJCT *firmware_part = NULL;
     
-    ASSERT(from_part_name != NULL);
-
-#if (ENABLE_SPI_FLASH) 
-    const struct fal_partition *app_part = NULL;
-    const struct fal_partition *firmware_part = NULL;
-    
-    app_part = fal_partition_find(APP_PART_NAME);
+    app_part = GET_FLASH_OBJECT(APP_PART_NAME);
     if (app_part == NULL)
     {
         BSP_Printf("%s: not found APP part.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
     
-    firmware_part = fal_partition_find(from_part_name);
-#else
-    const struct BSP_FLASH *app_part = NULL;
-    const struct BSP_FLASH *firmware_part = NULL;
-    
-    app_part = BSP_Flash_GetHandle(APP_PART_NAME);
-    if (app_part == NULL)
-    {
-        BSP_Printf("%s: not found.\r\n", __func__);
-        return FM_ERR_NO_THIS_PART;
-    }
-    
-    firmware_part = BSP_Flash_GetHandle(from_part_name);
-#endif
+    firmware_part = GET_FLASH_OBJECT(from_part_name);
     if (firmware_part == NULL)
     {
         BSP_Printf("%s: not found %s part.\r\n", __func__, from_part_name);
@@ -830,11 +804,7 @@ FM_ERR_CODE  FM_UpdateToAPP(const char *from_part_name)
         if ((_fpk_head.pkg_size - read_posit) < FPK_LEAST_HANDLE_BYTE)
             need_read_size = _fpk_head.pkg_size - read_posit;
 
-    #if (ENABLE_SPI_FLASH) 
-        read_len = fal_partition_read(firmware_part, (read_posit + FPK_HEAD_SIZE), _fpk_min_handle_buff, need_read_size);
-    #else
-        read_len = BSP_Flash_Read(firmware_part, (read_posit + FPK_HEAD_SIZE), _fpk_min_handle_buff, need_read_size);
-    #endif
+        read_len = FLASH_PART_READ(firmware_part, (read_posit + FPK_HEAD_SIZE), _fpk_min_handle_buff, need_read_size);
         if (read_len < 0)
         {
             BSP_Printf("%s: read error (%d).\r\n", __func__, __LINE__);
@@ -867,21 +837,24 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
 {
     ASSERT(part_name != NULL);
 
-#if (ENABLE_SPI_FLASH && DOWNLOAD_PART_LOCATION == 1)
-    #if (SPI_FLASH_ERASE_GRANULARITY > FPK_LEAST_HANDLE_BYTE)
-    #error "erase granularity oversize than _fpk_min_handle_buff array"
-    #endif
-    /* 将 download 分区首地址的数据读出，长度为片内 flash 最小擦除粒度 */
-    const struct fal_partition *part = NULL;
+#if (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH)
+    const uint32_t earse_unit = SPI_FLASH_ERASE_GRANULARITY;
+#else
+    const uint32_t earse_unit = ONCHIP_FLASH_ERASE_GRANULARITY;
+#endif
+
     
-    part = fal_partition_find(part_name);
+    /* 将 download 分区首地址的数据读出，长度为片内 flash 最小擦除粒度 */
+    const struct FLASH_OBEJCT *part = NULL;
+    
+    part = GET_FLASH_OBJECT(part_name);
     if (NULL == part)
     {
         BSP_Printf("%s: not found.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
     
-    if (fal_partition_read(part, 0, &_fpk_min_handle_buff[0], SPI_FLASH_ERASE_GRANULARITY) < 0)
+    if (FLASH_PART_READ(part, 0, &_fpk_min_handle_buff[0], earse_unit) < 0)
     {
         BSP_Printf("%s: read error.\r\n", __func__);
         return FM_ERR_UPDATE_VER_READ_ERR;
@@ -896,82 +869,18 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
     p_pkg_head->fw_old_ver[3] = p_pkg_head->fw_new_ver[3];
 
     /* 将读出数据的区域擦除 */
-    if (fal_partition_erase(part, 0, SPI_FLASH_ERASE_GRANULARITY) < 0)
+    if (FLASH_PART_ERASE(part, 0, earse_unit) < 0)
     {
         BSP_Printf("%s: %s part erase failed.\r\n", __func__, part_name);
         return FM_ERR_UPDATE_VER_ERASE_ERR;
     }
 
     /* 将新的数据写入擦除的区域 */ 
-    if (fal_partition_write(part, 0, &_fpk_min_handle_buff[0], SPI_FLASH_ERASE_GRANULARITY) < 0)
+    if (FLASH_PART_WRITE(part, 0, &_fpk_min_handle_buff[0], earse_unit) < 0)
     {
         BSP_Printf("%s: write error (%d).\r\n", __func__, __LINE__);
         return FM_ERR_UPDATE_VER_WRITE_ERR;
     }
-#else
-    #if (ONCHIP_FLASH_ERASE_GRANULARITY > FPK_LEAST_HANDLE_BYTE)
-    #error "erase granularity oversize than _fpk_min_handle_buff array"
-    #endif
-    /* 将 download 分区首地址的数据读出，长度为片内 flash 最小擦除粒度 */
-    #if (ENABLE_SPI_FLASH)     
-    const struct fal_partition *part = NULL;
-    
-    part = fal_partition_find(part_name);
-    if (NULL == part)
-    {
-        BSP_Printf("%s: not found.\r\n", __func__);
-        return FM_ERR_NO_THIS_PART;
-    }
-    
-    if (fal_partition_read(part, 0, (uint8_t *)&_fpk_min_handle_buff[0], ONCHIP_FLASH_ERASE_GRANULARITY) < 0)
-    #else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(part_name);
-    if (part == NULL)
-    {
-        BSP_Printf("%s: not found.\r\n", __func__);
-        return FM_ERR_NO_THIS_PART;
-    }
-    BSP_Printf("%s: part name: %s\r\n", __func__, part_name);
-    
-    if (BSP_Flash_Read(part, 0, &_fpk_min_handle_buff[0], ONCHIP_FLASH_ERASE_GRANULARITY) < 0)
-    #endif
-    {
-        BSP_Printf("%s: read error.\r\n", __func__);
-        return FM_ERR_UPDATE_VER_READ_ERR;
-    }
-
-    /* 修改固件包头中旧版本字段的版本信息为新的固件版本 */
-    struct FPK_HEAD *p_pkg_head = (struct FPK_HEAD *)&_fpk_min_handle_buff[0];
-
-    p_pkg_head->fw_old_ver[0] = p_pkg_head->fw_new_ver[0];
-    p_pkg_head->fw_old_ver[1] = p_pkg_head->fw_new_ver[1];
-    p_pkg_head->fw_old_ver[2] = p_pkg_head->fw_new_ver[2];
-    p_pkg_head->fw_old_ver[3] = p_pkg_head->fw_new_ver[3];
-
-    /* 将读出数据的区域擦除 */
-    #if (ENABLE_SPI_FLASH) 
-    if (fal_partition_erase(part, 0, ONCHIP_FLASH_ERASE_GRANULARITY) < 0)
-    #else
-    if (BSP_Flash_Erase(part, 0, ONCHIP_FLASH_ERASE_GRANULARITY) < 0)
-    #endif
-    {
-        BSP_Printf("%s: %s part erase failed.\r\n", __func__, part_name);
-        return FM_ERR_UPDATE_VER_ERASE_ERR;
-    }  
-
-    /* 将新的数据写入擦除的区域 */
-    #if (ENABLE_SPI_FLASH)     
-    if (fal_partition_write(part, 0, &_fpk_min_handle_buff[0], ONCHIP_FLASH_ERASE_GRANULARITY) < 0)
-    #else
-    if (BSP_Flash_Write(part, 0, &_fpk_min_handle_buff[0], ONCHIP_FLASH_ERASE_GRANULARITY) < 0)
-    #endif
-    {
-        BSP_Printf("%s: write error (%d).\r\n", __func__, __LINE__);
-        return FM_ERR_UPDATE_VER_WRITE_ERR;
-    }
-#endif
 
     memcpy((uint8_t *)&_fpk_head, &_fpk_min_handle_buff[0], FPK_HEAD_SIZE);
     BSP_Printf("fw old ver: V%d.%d.%d.%d\r\n", p_pkg_head->fw_old_ver[0], p_pkg_head->fw_old_ver[1], p_pkg_head->fw_old_ver[2], p_pkg_head->fw_old_ver[3]);
@@ -990,22 +899,16 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
  */
 FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
 {
-#if (ENABLE_SPI_FLASH)  
-    const struct fal_partition *part = NULL;
+    const struct FLASH_OBEJCT *part = NULL;
     
-    part = fal_partition_find(APP_PART_NAME);
-#else
-    const struct BSP_FLASH *part = NULL;
-    
-    part = BSP_Flash_GetHandle(APP_PART_NAME);
-#endif
+    part = GET_FLASH_OBJECT(APP_PART_NAME);
     if (part == NULL)
     {
         BSP_Printf("%s: not found APP part.\r\n", __func__);
         return FM_ERR_NO_THIS_PART;
     }
     
-    if (BSP_Flash_Read(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_old_ver[0], FPK_VERSION_SIZE) < 0)
+    if (FLASH_PART_READ(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_old_ver[0], FPK_VERSION_SIZE) < 0)
     {
         BSP_Printf("%s: read error.\r\n", __func__);
         return FM_ERR_READ_VER_ERR;
@@ -1020,7 +923,7 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
         return FM_ERR_VER_AREA_NO_ERASE;
     }
 
-    if (BSP_Flash_Write(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_new_ver[0], FPK_VERSION_SIZE) < 0)
+    if (FLASH_PART_WRITE(part, (APP_PART_SIZE - FPK_VERSION_SIZE), (uint8_t *)&_fpk_head.fw_new_ver[0], FPK_VERSION_SIZE) < 0)
     {
         BSP_Printf("%s: write error.\r\n", __func__);
         return FM_ERR_WRITE_VER_ERR;
@@ -1059,19 +962,11 @@ static void _Reset_Write(void)
  * @param[in]  decrypt: 0: 固件包无加密。1: 固件包有加密
  * @retval FM_ERR_CODE
  */
-#if (ENABLE_SPI_FLASH)
-static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct fal_partition *part, 
+static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct FLASH_OBEJCT *part, 
                                                uint8_t  *data, 
                                                uint16_t pkg_size, 
                                                uint8_t  decrypt,
                                                FM_FIRMWARE_WRITE_DIR  write_dir)
-#else
-static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct BSP_FLASH *part, 
-                                               uint8_t  *data, 
-                                               uint16_t pkg_size, 
-                                               uint8_t  decrypt,
-                                               FM_FIRMWARE_WRITE_DIR  write_dir)
-#endif
 {
     uint8_t *fw_4096byte_buff = data;
 
@@ -1124,12 +1019,8 @@ static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct BSP_FLASH *part,
         _storage_data_size -= ONCHIP_FLASH_ONCE_WRITE_BYTE;
         _write_part_addr    = ONCHIP_FLASH_ONCE_WRITE_BYTE;
     }
-
-#if (ENABLE_SPI_FLASH)     
-    if (fal_partition_write(part, _write_part_addr, fw_4096byte_buff, _storage_data_size) < 0)
-#else
-    if (BSP_Flash_Write(part, _write_part_addr, fw_4096byte_buff, _storage_data_size) < 0)
-#endif
+     
+    if (FLASH_PART_WRITE(part, _write_part_addr, fw_4096byte_buff, _storage_data_size) < 0)
     {
         BSP_Printf("%s: write error (%d).\r\n", __func__, __LINE__);
         _Reset_Write();

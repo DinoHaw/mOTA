@@ -29,20 +29,19 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Version:         v1.0.1
+ * Change Logs:
+ * Date           Author       Notes
+ * 2022-11-23     Dino         the first version
+ * 2022-12-08     Dino         增加固件包可放置在 SPI flash 的功能
  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_flash.h"
+#include "fal_onchip_flash.h"
 
 
-#if (ENABLE_SPI_FLASH == 0)
-/* Extern functions -----------------------------------------------------------*/
-extern int read(long offset, uint8_t *buf, size_t size);
-extern int write(long offset, const uint8_t *buf, size_t size);
-extern int erase(long offset, size_t size);
-
-
+#if (IS_ENABLE_SPI_FLASH == 0)
 /* Private variables ---------------------------------------------------------*/
 static struct BSP_FLASH *_part_head;
 
@@ -165,5 +164,6 @@ static void _Flash_Add(struct BSP_FLASH *part)
 }
 
 #endif
+
 
 

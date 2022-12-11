@@ -33,7 +33,6 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "fal_stm32_flash.h"
 #include <fal.h>
 #include "bsp_common.h"
 

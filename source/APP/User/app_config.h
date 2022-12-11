@@ -54,7 +54,7 @@
 /* 配置选项 */
 #define ENABLE_ASSERT                       0                   /* 是否使能函数入口参数检查 */
 #define ENABLE_DEBUG_PRINT                  0                   /* 是否使能调试信息打印 */
-#define EANBLE_PRINTF_USING_RTT             0                   /* BSP_Print函数是否使用SEGGER RTT作为输出端口 */
+#define EANBLE_PRINTF_USING_RTT             1                   /* BSP_Print函数是否使用SEGGER RTT作为输出端口 */
 
 #define USING_RTOS_TYPE                     RTOS_USING_NONE
 #define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTT的打印端口 */

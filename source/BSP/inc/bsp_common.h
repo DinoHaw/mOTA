@@ -48,7 +48,7 @@
 #endif
 #include "bsp_uart.h"
 #include "bsp_timer.h"
-#if (ENABLE_SPI_FLASH == 0)
+#if (IS_ENABLE_SPI_FLASH == 0)
 #include "bsp_flash.h"
 #endif
 

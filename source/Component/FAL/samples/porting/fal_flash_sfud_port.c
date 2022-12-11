@@ -25,24 +25,35 @@
 #include <fal.h>
 #include <sfud.h>
 
-#ifdef FAL_USING_SFUD_PORT
+
+#if (IS_ENABLE_SPI_FLASH && defined(FAL_USING_SFUD_PORT)) 
 #ifdef RT_USING_SFUD
 #include <spi_flash_sfud.h>
 #endif
 
-//#ifndef FAL_USING_NOR_FLASH_DEV_NAME
-//#define FAL_USING_NOR_FLASH_DEV_NAME             "norflash0"
-//#endif
 
 static int init(void);
 static int read(long offset, uint8_t *buf, size_t size);
 static int write(long offset, const uint8_t *buf, size_t size);
 static int erase(long offset, size_t size);
 
-//sfud_flash *sfud_spi_flash1;
 
-static sfud_flash_t sfud_spi_flash1 = NULL;
-struct fal_flash_dev spi_flash1 = {SPI_FLASH_DEV_NAME, 0, 16 * 1024 * 1024, 4096, {init, read, write, erase}};
+static sfud_flash *sfud_spi_flash1;
+/* 若 flash 支持 SFDP 且已经开启 SFUD_USING_SFDP ，则 len 和 blk_size 不填或填错都无问题，
+   这两个参数都会被读到的 SFDP 更新 */
+struct fal_flash_dev spi_flash1 = 
+{
+    .name      = FAL_SPI_FLASH_DEV_NAME, 
+    .addr      = 0, 
+    .len       = 16 * 1024 * 1024, 
+    .blk_size  = SPI_FLASH_ERASE_GRANULARITY, 
+
+    .ops.init  = init,
+    .ops.read  = read,
+    .ops.write = write,
+    .ops.erase = erase,
+};
+
 
 static int init(void)
 {
@@ -52,8 +63,6 @@ static int init(void)
     sfud_dev = rt_sfud_flash_find_by_dev_name(FAL_USING_NOR_FLASH_DEV_NAME);
 #else
     /* bare metal platform */
-//    extern sfud_flash sfud_norflash0;
-//    sfud_dev = &sfud_spi_flash1;
 #endif
     sfud_init();        // initialize all of the SFUD flash
     
@@ -72,19 +81,23 @@ static int init(void)
     return 0;
 }
 
+
 static int read(long offset, uint8_t *buf, size_t size)
 {
     assert(sfud_spi_flash1);
     assert(sfud_spi_flash1->init_ok);
+    BSP_Printf("[FAL SFUD] read addr: 0x%.8X, size: %d\r\n", spi_flash1.addr + offset, size);
     sfud_read(sfud_spi_flash1, spi_flash1.addr + offset, size, buf);
 
     return size;
 }
 
+
 static int write(long offset, const uint8_t *buf, size_t size)
 {
     assert(sfud_dev);
     assert(sfud_dev->init_ok);
+    BSP_Printf("[FAL SFUD] write addr: 0x%.8X, size: %d\r\n", spi_flash1.addr + offset, size);
     if (sfud_write(sfud_spi_flash1, spi_flash1.addr + offset, size, buf) != SFUD_SUCCESS)
     {
         return -1;
@@ -93,10 +106,12 @@ static int write(long offset, const uint8_t *buf, size_t size)
     return size;
 }
 
+
 static int erase(long offset, size_t size)
 {
     assert(sfud_dev);
     assert(sfud_dev->init_ok);
+    BSP_Printf("[FAL SFUD] erase addr: 0x%.8X, size: %d\r\n", spi_flash1.addr + offset, size);
     if (sfud_erase(sfud_spi_flash1, spi_flash1.addr + offset, size) != SFUD_SUCCESS)
     {
         return -1;
@@ -104,5 +119,6 @@ static int erase(long offset, size_t size)
 
     return size;
 }
+
 #endif /* FAL_USING_SFUD_PORT */
 

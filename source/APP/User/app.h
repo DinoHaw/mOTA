@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.2
+ * Version:         v1.0.3
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -40,6 +40,7 @@
  *                             5. 增加 Main_Satrt() 函数
  *                             6. 增加是否判断固件包超过分区大小的选项
  * 2022-12-07     Dino         增加对 STM32L4 的支持
+ * 2022-12-08     Dino         增加固件包可放置在 SPI flash 的功能
  */
 
 #ifndef __APP_H__
@@ -122,6 +123,7 @@ struct FIRMWARE_UPDATE_INFO
     PP_CMD_ERR_CODE        cmd_exe_err_code;        /* 指令执行失败时的故障码 */
 
     uint8_t start           :1;                     /* 开始固件更新流程的标志 */
+    uint8_t is_recovery     :1;                     /* 是否正在进行恢复出厂固件的标志位 */
     uint8_t                 :0;
     
     uint8_t total_progress;                         /* 固件更新的总进度， 0-100 */

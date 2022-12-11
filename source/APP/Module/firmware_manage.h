@@ -29,11 +29,12 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.1
+ * Version:         v1.0.2
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
  * 2022-12-07     Dino         修复 STM32L4 写入 flash 的最小单位问题
+ * 2022-12-10     Dino         增加对 SPI flash 的支持
  */
 
 #ifndef __FIRMWARE_MANAGE_H__
@@ -79,6 +80,7 @@ typedef enum
     FM_ERR_READ_VER_ERR                 = 0x1C,             /* 读取固件的版本失败 */
     FM_ERR_WRITE_VER_ERR                = 0x1D,             /* 固件的版本写入 APP 分区失败 */
     FM_ERR_VER_AREA_NO_ERASE            = 0x1E,             /* APP 分区的固件版本区域没有擦除 */
+    FM_ERR_READ_FLASH_ERR               = 0x1F,             /* 读取 flash 错误 */
 
 } FM_ERR_CODE;
 

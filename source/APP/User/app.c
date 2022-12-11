@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.2
+ * Version:         v1.0.3
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -40,11 +40,33 @@
  *                             5. 增加 Main_Satrt() 函数
  *                             6. 增加是否判断固件包超过分区大小的选项
  * 2022-12-07     Dino         增加对 STM32L4 的支持
+ * 2022-12-08     Dino         增加固件包可放置在 SPI flash 的功能
  */
 
 
 /* Includes ------------------------------------------------------------------*/
 #include "app.h"
+
+#if (USING_PART_PROJECT < ONE_PART_PROJECT || USING_PART_PROJECT > TRIPLE_PART_PROJECT)
+#error "The USING_PART_PROJECT option is out of range."
+#endif
+
+#if (USING_IS_NEED_UPDATE_PROJECT < USING_HOST_CMD_UPDATE ||    \
+     USING_IS_NEED_UPDATE_PROJECT > USING_APP_SET_FLAG_UPDATE)
+#error "The USING_IS_NEED_UPDATE_PROJECT option is out of range."
+#endif
+
+#if (USING_AUTO_UPDATE_PROJECT < DO_NOT_AUTO_UPDATE || USING_AUTO_UPDATE_PROJECT > VERSION_WRITE_TO_APP)
+#error "The USING_AUTO_UPDATE_PROJECT option is out of range."
+#endif
+
+#if (USING_APP_SAFETY_CHECK_PROJECT < DO_NOT_CHECK || USING_APP_SAFETY_CHECK_PROJECT > DO_NOT_DO_ANYTHING)
+#error "The USING_APP_SAFETY_CHECK_PROJECT option is out of range."
+#endif
+
+#if (FACTORY_NO_FIRMWARE_SOLUTION < JUMP_TO_APP || FACTORY_NO_FIRMWARE_SOLUTION > WAIT_FOR_NEW_FIRMWARE)
+#error "The FACTORY_NO_FIRMWARE_SOLUTION option is out of range."
+#endif
 
 
 /* Private variables ---------------------------------------------------------*/
@@ -137,21 +159,13 @@ void System_Init(void)
         else
             _Bootloader_SetExeFlow(EXE_FLOW_FIND_RUNNING_FIRMWARE);
     }
+    update_flag = 0;
 #endif
 
-    /* TODO: 此处的 ASSERT 最佳实现方式应为编译阶段即可报错，但尚未找到方法 */
+    /* TODO: 此处的 ASSERT 最佳实现方式应为编译阶段即可报错，但尚未找到好的实现方法 */
     ASSERT(USING_PART_PROJECT >= ONE_PART_PROJECT && USING_PART_PROJECT <= TRIPLE_PART_PROJECT);
     ASSERT(sizeof(AES256_KEY) != 32);
     ASSERT(sizeof(AES256_IV) != 16);
-
-    ASSERT(USING_AUTO_UPDATE_PROJECT >= DO_NOT_AUTO_UPDATE          \
-    &&     USING_AUTO_UPDATE_PROJECT <= MODIFY_DOWNLOAD_PART_PROJECT);
-
-    ASSERT(USING_APP_SAFETY_CHECK_PROJECT >= DO_NOT_CHECK       \
-    &&     USING_APP_SAFETY_CHECK_PROJECT <= DO_NOT_DO_ANYTHING);
-
-    ASSERT(ONCHIP_FLASH_ERASE_GRANULARITY > 0);
-    ASSERT(SPI_FLASH_ERASE_GRANULARITY > 0);
 
     ASSERT(ONCHIP_FLASH_SIZE > 0);
     ASSERT(APP_PART_SIZE > 0);
@@ -173,7 +187,7 @@ void APP_Init(void)
 {
 #if (ENABLE_DEBUG_PRINT)
     #if (EANBLE_PRINTF_USING_RTT)
-    /* 配置通道 0 ，下行配置 */
+    /* 配置通道 0 ，下行配置 SEGGER_RTT_MODE_NO_BLOCK_SKIP */
     SEGGER_RTT_ConfigDownBuffer(SEGGER_RTT_PRINTF_TERMINAL, "RTTDOWN", NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
     SEGGER_RTT_SetTerminal(SEGGER_RTT_PRINTF_TERMINAL);
     #else
@@ -186,9 +200,11 @@ void APP_Init(void)
     BSP_Printf("UID: %.8X %.8X %.8X\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
     BSP_Printf("bootloader Version: V%d.%d\r\n", BOOT_VERSION_MAIN, BOOT_VERSION_SUB);
     BSP_Printf("HAL Version: V%d.%d.%d.%d\r\n", (hal_version >> 24), (uint8_t)(hal_version >> 16), (uint8_t)(hal_version >> 8), (uint8_t)hal_version);
-    #if (ENABLE_SPI_FLASH)
+    #if (IS_ENABLE_SPI_FLASH)
     BSP_Printf("FAL Version: V%s\r\n", FAL_SW_VERSION);
+    BSP_Printf("SFUD Version: V%s\r\n", SFUD_SW_VERSION);
     #endif
+    BSP_Printf("perf_counter version: V%d.%d.%d\r\n", __PERF_COUNTER_VER_MAJOR__, __PERF_COUNTER_VER_MINOR__, __PERF_COUNTER_VER_REVISE__);
 #endif
 
 #if (ENABLE_FACTORY_FIRMWARE_BUTTON)
@@ -223,7 +239,7 @@ void APP_Init(void)
 #endif
 
     /* 软件初始化 */
-    DT_Init(&_data_if, BSP_UART2, _dev_rx_buff, &_dev_rx_len, PP_MSG_BUFF_SIZE + 16);
+    DT_Init(&_data_if, BSP_UART1, _dev_rx_buff, &_dev_rx_len, PP_MSG_BUFF_SIZE + 16);
     PP_Init(_UART_SendData, NULL, _Bootloader_ProtocolDataHandle, _Bootloader_SetReplyInfo);
     FM_Init();
 }
@@ -513,10 +529,29 @@ void APP_Running(void)
                 #if (USING_PART_PROJECT == ONE_PART_PROJECT)
                     _fw_update_info.total_progress = 100;
                     _fw_update_info.cmd_exe_result = PP_RESULT_OK;
+                    _fw_update_info.status         = BOOT_STATUS_UPDATE_SUCCESS;
                     _Bootloader_SetExeFlow(EXE_FLOW_JUMP_TO_APP);
                 #else
+                    #if (ENABLE_FACTORY_UPDATE_TO_APP)
                     _fw_update_info.total_progress = 20;
                     _Bootloader_SetExeFlow(EXE_FLOW_ERASE_APP);
+                    #else
+                    /* 不允许固件写入 factory 分区后也将固件更新至 APP 分区 */
+                    /* 未在执行恢复出厂固件 且 操作的是 factory 分区，跳过写入 APP 分区的流程 */
+                    if (_fw_update_info.is_recovery == 0
+                    &&  strncmp(part_name, FACTORY_PART_NAME, MAX_NAME_LEN) == 0)
+                    {
+                        _fw_update_info.total_progress = 100;
+                        _fw_update_info.cmd_exe_result = PP_RESULT_OK;
+                        _fw_update_info.status         = BOOT_STATUS_UPDATE_SUCCESS;
+                        _Bootloader_SetExeFlow(EXE_FLOW_JUMP_TO_APP);
+                    }
+                    else
+                    {
+                        _fw_update_info.total_progress = 20;
+                        _Bootloader_SetExeFlow(EXE_FLOW_ERASE_APP);
+                    }
+                    #endif
                 #endif
                 }
                 else
@@ -587,16 +622,50 @@ void APP_Running(void)
                 _fw_update_info.step = STEP_VERIFY_APP;
                 /* 因此时 APP 分区的首地址数据仍未写入，因此需要让 FM_VerifyFirmware 自动填充以进行校验 */
                 _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_VerifyFirmware(APP_PART_NAME, FM_GetRawCRC32(), 1);
-                if (_fw_update_info.cmd_exe_err_code == FM_ERR_OK)
+                if (_fw_update_info.cmd_exe_err_code != FM_ERR_OK)
+                {
+                    _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
+                    _fw_update_info.cmd_exe_result = PP_RESULT_CANCEL;
+                    break;
+                }
+
+                /* 若正在执行恢复出厂固件，则擦除 download 分区固件 */
+                if (_fw_update_info.is_recovery)
+                {
+                    /* 判断 download 分区是否为空 */
+                    _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_IsEmpty(DOWNLOAD_PART_NAME);
+                    if (_fw_update_info.cmd_exe_err_code == FM_ERR_OK)
+                    {
+                        _fw_update_info.total_progress = 80;
+                        _Bootloader_SetExeFlow(EXE_FLOW_UPDATE_TO_APP_DONE);
+                        break;
+                    }
+                    else if (_fw_update_info.cmd_exe_err_code != FM_ERR_FLASH_NO_EMPTY)
+                    {
+                        _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
+                        _fw_update_info.cmd_exe_result = PP_RESULT_CANCEL;
+                        break;
+                    }
+                    
+                    /* 为空时才擦除分区 */
+                    _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_EraseFirmware(DOWNLOAD_PART_NAME);
+                    if (_fw_update_info.cmd_exe_err_code == FM_ERR_OK)
+                    {
+                        _fw_update_info.total_progress = 80;
+                        _Bootloader_SetExeFlow(EXE_FLOW_UPDATE_TO_APP_DONE);
+                    }
+                    else
+                    {
+                        _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
+                        _fw_update_info.cmd_exe_result = PP_RESULT_CANCEL;
+                    }
+                }
+                else
                 {
                     _fw_update_info.total_progress = 80;
                     _Bootloader_SetExeFlow(EXE_FLOW_UPDATE_TO_APP_DONE);
                 }
-                else
-                {
-                    _Bootloader_SetExeFlow(EXE_FLOW_FAILED);
-                    _fw_update_info.cmd_exe_result = PP_RESULT_CANCEL;
-                }
+                
                 BSP_Printf("%s: step 4 !!!\r\n", __func__);
                 break;
             }
@@ -695,6 +764,7 @@ void APP_Running(void)
                 _fw_update_info.cmd_exe_err_code = (PP_CMD_ERR_CODE)FM_ReadFirmwareHead(FACTORY_PART_NAME);
                 if (_fw_update_info.cmd_exe_err_code == FM_ERR_OK)
                 {
+                    _fw_update_info.is_recovery = 1;
                     _Bootloader_SetExeFlow(EXE_FLOW_VERIFY_FIRMWARE);
                 }
                 else
@@ -712,10 +782,11 @@ void APP_Running(void)
             /* 固件更新失败的处理逻辑 */
             case EXE_FLOW_FAILED:
             {
-                _is_firmware_head      = 0;
-                _fw_update_info.start  = 0;
-                _fw_update_info.step   = STEP_VERIFY_FIRMWARE;
-                _fw_update_info.status = BOOT_STATUS_UPDATE_FAILED;
+                _is_firmware_head           = 0;
+                _fw_update_info.start       = 0;
+                _fw_update_info.is_recovery = 0;
+                _fw_update_info.step        = STEP_VERIFY_FIRMWARE;
+                _fw_update_info.status      = BOOT_STATUS_UPDATE_FAILED;
                 _Bootloader_SetExeFlow(EXE_FLOW_NOTHING);
                 break;
             }
@@ -1263,7 +1334,7 @@ static void _Bootloader_JumpToAPP(void)
         
         _stack_addr    = *(volatile uint32_t *)APP_ADDRESS;
         _reset_handler = *(volatile uint32_t *)(APP_ADDRESS + 4);
-        
+ 
         /* 关闭全局中断 */
         BSP_INT_DIS();
         
@@ -1404,7 +1475,7 @@ static void _Timer_ScanKeyCallback(void *user_data)
  */
 static void _Timer_LedFlashCallback(void *user_data)
 {
-    HAL_GPIO_TogglePin(G_LED_GPIO_Port, G_LED_Pin);
+    HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
 }
 
 

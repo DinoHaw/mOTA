@@ -42,7 +42,7 @@
 #define BSP_UART_BUFF_SIZE                  64                 /* UART数据一级缓存的大小 */
 
 #define BSP_USING_UART1                     1
-#define BSP_USING_UART2                     1
+#define BSP_USING_UART2                     0
 #define BSP_USING_UART2_RE                  0
 #define BSP_USING_UART3                     0
 #define BSP_USING_UART3_RE                  0

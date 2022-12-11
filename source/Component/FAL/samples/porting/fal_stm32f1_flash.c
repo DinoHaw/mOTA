@@ -31,10 +31,11 @@
  * Author:          Dino Haw <347341799@qq.com>
  * Version:         v1.0.0
  */
-
-#include "fal_stm32f1_flash.h"
+ 
+/* Includes ------------------------------------------------------------------*/
 #include <fal.h>
 #include "bsp_common.h"
+
 
 /* Extern function prototypes ------------------------------------------------*/
 extern void Firmware_OperateCallback(uint16_t progress);
@@ -200,7 +201,7 @@ HAL_StatusTypeDef HAL_FLASH_Lock(void)
 int read(long offset, uint8_t *buf, size_t size)
 {
     size_t i = 0;
-#if (ENABLE_SPI_FLASH)
+#if (IS_ENABLE_SPI_FLASH)
     uint32_t addr = stm32_onchip_flash.addr + offset;
 #else
     uint32_t addr = offset;
@@ -243,7 +244,7 @@ int write(long offset, const uint8_t *buf, size_t size)
 #elif USE_STDPERIPH_DRIVER
     uint32_t write_data = 0, temp_data = 0;
 #endif
-#if (ENABLE_SPI_FLASH)
+#if (IS_ENABLE_SPI_FLASH)
     uint32_t addr = stm32_onchip_flash.addr + offset;
 #else
     uint32_t addr = offset;
@@ -358,7 +359,7 @@ int erase(long offset, size_t size)
 #endif
     uint32_t progress_unit = 0;
     uint32_t progress = 0;
-#if (ENABLE_SPI_FLASH)
+#if (IS_ENABLE_SPI_FLASH)
     uint32_t addr = stm32_onchip_flash.addr + offset;
 #else
     uint32_t addr = offset;

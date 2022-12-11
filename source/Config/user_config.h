@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.2
+ * Version:         v1.0.3
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -38,6 +38,8 @@
  *                             3. 将 flash 的擦除粒度配置移至 user_config.h 
  *                             4. 增加是否判断固件包超过分区大小的选项
  * 2022-12-07     Dino         增加 ONCHIP_FLASH_ONCE_WRITE_BYTE 配置项
+ * 2022-12-08     Dino         1. 增加固件包可放置在 SPI flash 的功能
+ *                             2. 增加 ENABLE_FACTORY_UPDATE_TO_APP 配置项
  */
 
 /**
@@ -71,10 +73,10 @@
  *    ！！！放置在 SPI Flash 的分区至少需要最小擦写粒度的整数倍为单位进行对齐，建议以 sector 的整数倍为单位进行对齐！！！
  */
 #define ONCHIP_FLASH_SIZE                   ((uint32_t)(512 * 1024))    /* 片上 flash 容量，单位: byte */
-#define BOOTLOADER_SIZE                     ((uint32_t)(48 * 1024))     /* 预留给 bootloader 的空间，单位: byte（最小需要大于本工程编译后的大小） */
-#define APP_PART_SIZE                       ((uint32_t)(80 * 1024))     /* 预留给 APP 分区的空间，单位: byte（注意页对齐） */
-#define DOWNLOAD_PART_SIZE                  ((uint32_t)(128 * 1024))             /* 预留给 download 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
-#define FACTORY_PART_SIZE                   ((uint32_t)(128 * 1024))             /* 预留给 factory 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
+#define BOOTLOADER_SIZE                     ((uint32_t)(32 * 1024))     /* 预留给 bootloader 的空间，单位: byte（最小需要大于本工程编译后的大小） */
+#define APP_PART_SIZE                       ((uint32_t)(32 * 1024))     /* 预留给 APP 分区的空间，单位: byte（注意页对齐） */
+#define DOWNLOAD_PART_SIZE                  (APP_PART_SIZE)             /* 预留给 download 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
+#define FACTORY_PART_SIZE                   (APP_PART_SIZE)             /* 预留给 factory 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
 
 
 /**
@@ -161,6 +163,19 @@
 
 
 /**
+ * 【选择通过 bootloader 将固件包下载至 factory 分区时是否更新至 APP 的选项】
+ * 说明: 
+ *    通过 bootloader 将固件包下载至 factory 分区时是否自动更新至 APP ，若不启用，则 bootloader 会在固件包下载至 factory 
+ *    分区并校验成功后尝试跳转至 APP 分区，若 APP 分区无可用的固件或校验失败，将会根据 FACTORY_NO_FIRMWARE_SOLUTION 选项
+ *    执行对应的方案
+ * 选项: 
+ *    0: 不启用
+ *    1: 启用
+ */ 
+#define ENABLE_FACTORY_UPDATE_TO_APP        0
+
+
+/**
  * 【选择判断固件包是否超过分区大小的选项】
  * 说明: 
  *    当启用判断时，若有特殊处理，需自行修改代码，位于 app.c 的 APP_Running 函数 的 EXE_FLOW_VERIFY_FIRMWARE_HEAD 流程
@@ -197,7 +212,7 @@
  *                                  * 此种方式有以下优劣势：
  *                                    1. 优势：上电时可校验 APP 分区的固件数据正确性和完整性，以提高 APP 固件有损坏或遭篡改时的安全性，甚至
  *                                             可以将固件恢复正常，有效提高系统的安全等级
- *                                    2. 劣势：需要占用 APP 分区 16 byte 的空间
+ *                                    2. 劣势：需要占用 APP 分区尾部 16 byte 的空间
  * 选项: 
  *    DO_NOT_AUTO_UPDATE            或 0
  *    ERASE_DOWNLOAD_PART_PROJECT   或 1
@@ -210,12 +225,12 @@
 
 
 /**
- * 【片内 Flash 放置固件包所在 sector 的擦除粒度 ( TODO: 暂未实现 )】
+ * 【片内 Flash 放置固件包所在 sector 的擦除粒度】
  * 说明: 
  *    USING_AUTO_UPDATE_PROJECT = MODIFY_DOWNLOAD_PART_PROJECT 时，需要给出固件包所在 sector 的擦除粒度，单位是 byte
  */
 #if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
-#define ONCHIP_FLASH_ERASE_GRANULARITY      FPK_LEAST_HANDLE_BYTE
+#define ONCHIP_FLASH_ERASE_GRANULARITY      FLASH_PAGE_SIZE
 #endif
 
 
@@ -301,39 +316,15 @@
 
 
 /**
- * 【选择是否使用 SPI Flash 存放固件 ( TODO: 暂未实现 )】
- * 说明: 
- *    SPI Flash 可用于放置固件包，但只能用做 download 分区和 factory 分区
- *    本工程使用了 SFUD 库，因此可自动兼容不同厂家和不同容量的 SPI Flash 
- *    SPI Flash 的底层接口移植文件是 sfud_port.c ，实现内部 API 即可
- *    若使用的 SPI Flash 不支持 SFDP ，则需要修改 sfdu_flash_def.h 文件
- *    修改、移植方式和更多内容，详见:  https://github.com/armink/SFUD
- * 选项: 
- *    0: 不启用
- *    1: 启用
- */
-#if (USING_PART_PROJECT > ONE_PART_PROJECT)
-#define ENABLE_SPI_FLASH                    0
-#endif
-
-
-/**
- * 【SPI Flash 放置固件包所在 sector 的擦除粒度 ( TODO: 暂未实现 )】
- * 说明: 
- *    USING_AUTO_UPDATE_PROJECT = MODIFY_DOWNLOAD_PART_PROJECT 且 启用了 SPI Flash 时，需要给出固件包所在 sector 的擦除粒度，
- *    单位是 byte
- */
-#if (ENABLE_SPI_FLASH && USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
-#define SPI_FLASH_ERASE_GRANULARITY         4096
-#endif
-
-
-/**
- * 【选择分区的存放位置 ( TODO: 暂时仅支持片内)】
+ * 【选择分区的存放位置】
  * 说明: 
  *    当选择启用 SPI Flash 存放固件时，需要指定 download 和 factory 分区的存放位置
  *    本工程使用了 FAL 库，用于管理 flash 的分区。（仅在启用 SPI Flash 时）
  *    更多内容，详见:  https://github.com/RT-Thread-packages/fal
+ *    本工程同时还使用了 SFUD 库，因此可自动兼容不同厂家和不同容量的 SPI Flash 
+ *    SPI Flash 的底层接口移植文件是 sfud_port.c ，实现内部 API 即可
+ *    若使用的 SPI Flash 不支持 SFDP ，则需要修改 sfdu_flash_def.h 文件
+ *    修改、移植方式和更多内容，详见:  https://github.com/armink/SFUD
  * 解释: 
  *    STORE_IN_ONCHIP_FLASH : 片内 Flash
  *    STORE_IN_SPI_FLASH    : SPI Flash
@@ -343,9 +334,28 @@
  *    STORE_IN_ONCHIP_FLASH 或 0
  *    STORE_IN_SPI_FLASH    或 1
  */
-#if (ENABLE_SPI_FLASH && USING_PART_PROJECT > ONE_PART_PROJECT)
-#define DOWNLOAD_PART_LOCATION              STORE_IN_ONCHIP_FLASH
-#define FACTORY_PART_LOCATION               STORE_IN_ONCHIP_FLASH
+#if (USING_PART_PROJECT > ONE_PART_PROJECT)
+#define DOWNLOAD_PART_LOCATION              STORE_IN_SPI_FLASH
+#if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
+#define FACTORY_PART_LOCATION               STORE_IN_SPI_FLASH
+#endif
+
+/* 不要修改 IS_ENABLE_SPI_FLASH 的值 */
+#if (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH || FACTORY_PART_LOCATION == STORE_IN_SPI_FLASH)
+#define IS_ENABLE_SPI_FLASH                 1
+#endif
+#endif  /* #if (USING_PART_PROJECT > ONE_PART_PROJECT) */
+
+
+/**
+ * 【SPI Flash 放置固件包所在 sector 的擦除粒度】
+ * 说明: 
+ *    1. 启用了 SPI Flash 时，需要给出固件包所在 sector 的擦除粒度，单位是 byte
+ *    2. 若 flash 支持 SFDP 且已经开启 SFUD_USING_SFDP ，则 SPI_FLASH_ERASE_GRANULARITY 不填或填错都无问题，
+ *       其会被读到的 SFDP 更新 
+ */
+#if (IS_ENABLE_SPI_FLASH)
+#define SPI_FLASH_ERASE_GRANULARITY         4096
 #endif
 
 

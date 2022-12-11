@@ -189,8 +189,8 @@ void BSP_UART_Port_Init( struct UART_STRUCT *uart,
     BSP_Printf("id: %d\r\n", uart->id);
 //    BSP_Printf("name: %s\r\n", uart->name);
     BSP_Printf("rx_buff: 0x%.8p\r\n", &uart->rx_buff[0]);
-//    BSP_Printf("huart size: %d byte\r\n", sizeof(UART1_HANDLE));
-//    BSP_Printf("uart size: %d byte\r\n", sizeof(_uart1));
+    BSP_Printf("huart size: %d byte\r\n", sizeof(UART1_HANDLE));
+    BSP_Printf("uart size: %d byte\r\n", sizeof(_uart1));
     BSP_Printf("-----------------------------\r\n\r\n");
 }
 

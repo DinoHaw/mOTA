@@ -32,7 +32,7 @@
  * Version:         v1.0.0
  */
 
-#include "fal_stm32_flash.h"
+/* Includes ------------------------------------------------------------------*/
 #include <fal.h>
 #include "bsp_common.h"
 
