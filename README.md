@@ -28,12 +28,8 @@
 6.  **固件自动更新：** 当 download 或 factory 分区有可用的固件，且 APP 分区为空或 APP 分区不是最新版本的固件时，可配置为自动开始更新。
 7.  **恢复出厂设置：** factory 分区存放稳定版的固件，当设备需要恢复出厂设置时，该固件会被更新至 APP 分区。
 8.  **无须 deinit ：** 我们知道，固件更新完毕后从 bootloader 跳转至 APP 前需要对所用的外设进行 deinit ，恢复至上电时的初始状态。本组件的 bootloader 包含了下载器的功能，当使用复杂的外设收取固件包时， deinit 也将变得复杂，甚至很难排除对 APP 的影响。为此，本组件采用了再入 bootloader 的方式，给 APP 提供一个相当于刚上电的外设环境，免去了 deinit 的代码。
-9.  **功能可裁剪：** 本组件通过功能裁剪可实现单分区、双分区、三分区的方案切换、是否配置解密组件、是否自动更新 APP 、是否检查 APP 完整性、 _是否使用 SPI Flash （待实现）_ 。    
-
-&emsp;
-
- :tw-1f534: **暂未实现的功能：** 
-1.  支持将固件存放至 SPI Flash 的功能。
+9.  **功能可裁剪：** 本组件通过功能裁剪可实现单分区、双分区、三分区的方案切换、是否配置解密组件、是否自动更新 APP 、是否检查 APP 完整性、 _是否使用 SPI Flash （待实现）_ 。 
+10.  **固件存放至 SPI flash ：** 本组件可通过 `user_config.h` 配置 download 分区和 factory 分区的所在位置为片内 flash 或 SPI flash ，使用了 [SFUD (Serial Flash Universal Driver)](https://github.com/armink/SFUD) 作为 SPI flash 的底层驱动库。若使用的 SPI flash 支持 [SFDP (Serial Flash Discovable Parameters)](https://www.jedec.org/standards-documents/docs/jesd216b) ，则可在不修改任何源代码的情况下更换其它品牌型号的 SPI flash 。若不支持 [SFDP](https://www.jedec.org/standards-documents/docs/jesd216b) ，[SFUD](https://github.com/armink/SFUD) 中已有对应 SPI flash 参数表的话，也可做到在不修改任何源代码的情况下更换其它品牌型号的 SPI flash 。
 
 &emsp;
 
@@ -192,7 +188,7 @@ ram: 9720 byte (9.49 kB)
 ![update_flag的定义](image/screenshot/update_flag%E7%9A%84%E5%AE%9A%E4%B9%89.png)
 ![IDE配置RAM](image/screenshot/IDE%E9%85%8D%E7%BD%AERAM.png)  
 
-11.  工程配置建议选择 AC6 （虽然本组件也支持 AC5 ，除非不得已，否则建议使用 AC6），选择 C99 ，优化根据需要选择即可，建议按下图所示配置。
+11.  工程配置建议选择 AC6 （虽然本组件也支持 AC5 ，除非不得已，否则建议使用 AC6），选择 `C99` （如果使用了 [perf_counter](https://github.com/GorgonMeducer/perf_counter) ，则需要选择 `gnu99` ） ，优化根据需要选择即可，建议按下图所示配置。
 ![AC6的配置](image/screenshot/AC6%E7%9A%84%E9%85%8D%E7%BD%AE.png)
 
 12.  尝试再次编译并解决编译器提示的问题。
@@ -266,6 +262,7 @@ HAL_NVIC_SystemReset();
 3.   **[crc-lib-c](https://github.com/whik/crc-lib-c)**  为本工程的 CRC32 验算提供了基础。
 4.   **[tinyAES](https://github.com/kokke/tiny-AES-c)**  这是一个用 C 编写的 AES 、 ECB 、 CTR 和 CBC 加密算法的小型可移植的库。
 5.   **[SEGGER RTT](https://www.segger.com/products/debug-probes/j-link/technology/about-real-time-transfer/)**  SEGGER's Real Time Transfer (RTT) is the proven technology for system monitoring and interactive user I/O in embedded applications. It combines the advantages of SWO and semihosting at very high performance.
+6.   **[perf_counter](https://github.com/GorgonMeducer/perf_counter)** 该库利用 SysTick 实现了代码的运行时间测量和通用的 ms 及 us 的延时函数，且不影响原有的 SysTick 功能和逻辑，若使用的是 AC5 或 AC6 ，可以做到无感使用，即只需将 perf_counter 库添加进代码工程后即可直接使用，无需调用 init 之类的任何函数。
 
 &emsp;
 
