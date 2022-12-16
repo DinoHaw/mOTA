@@ -340,8 +340,9 @@
 #define FACTORY_PART_LOCATION               STORE_IN_SPI_FLASH
 #endif
 
-/* 不要修改 IS_ENABLE_SPI_FLASH 的值 */
+/* ！！！不要修改 ENABLE_SPI_FLASH 和 IS_ENABLE_SPI_FLASH 的值！！！ */
 #if (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH || FACTORY_PART_LOCATION == STORE_IN_SPI_FLASH)
+#define ENABLE_SPI_FLASH                    1
 #define IS_ENABLE_SPI_FLASH                 1
 #endif
 #endif  /* #if (USING_PART_PROJECT > ONE_PART_PROJECT) */

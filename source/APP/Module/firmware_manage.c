@@ -52,13 +52,13 @@
 #endif
 
 #if (IS_ENABLE_SPI_FLASH)
-    #define FLASH_OBEJCT        fal_partition
+    #define FLASH_OBJECT        fal_partition
     #define GET_FLASH_OBJECT    fal_partition_find
     #define FLASH_PART_READ     fal_partition_read
     #define FLASH_PART_WRITE    fal_partition_write
     #define FLASH_PART_ERASE    fal_partition_erase
 #else
-    #define FLASH_OBEJCT        BSP_FLASH
+    #define FLASH_OBJECT        BSP_FLASH
     #define GET_FLASH_OBJECT    BSP_Flash_GetHandle
     #define FLASH_PART_READ     BSP_Flash_Read
     #define FLASH_PART_WRITE    BSP_Flash_Write
@@ -95,7 +95,7 @@ extern void Firmware_OperateCallback(uint16_t progress);
 
 
 /* Private function prototypes -----------------------------------------------*/
-static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct FLASH_OBEJCT *part, 
+static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct FLASH_OBJECT *part, 
                                                uint8_t  *data, 
                                                uint16_t pkg_size, 
                                                uint8_t  decrypt,
@@ -172,7 +172,7 @@ FM_ERR_CODE  FM_IsEmpty(const char *part_name)
     
     ASSERT(part_name != NULL);
         
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
@@ -243,7 +243,7 @@ FM_ERR_CODE  FM_StorageFirmwareHead(const char *part_name, uint8_t *data)
 {
     uint32_t head_crc = 0;
     uint8_t  *p_fpk_head = (uint8_t *)&_fpk_head;
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
 
     ASSERT(part_name != NULL);
     ASSERT(data != NULL);
@@ -326,7 +326,7 @@ FM_ERR_CODE  FM_VerifyFirmware(const char *part_name, uint32_t crc32, uint8_t is
 #if (USING_PART_PROJECT > ONE_PART_PROJECT)
     uint8_t  first_flag = 0;
 #endif
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     ASSERT(part_name != NULL);
 
@@ -430,7 +430,7 @@ FM_ERR_CODE  FM_EraseFirmware(const char *part_name)
 {
     ASSERT(part_name != NULL);
 
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
@@ -459,7 +459,7 @@ FM_ERR_CODE  FM_WriteFirmwareDone(const char *part_name)
 {
     ASSERT(part_name != NULL);
     
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
@@ -495,7 +495,7 @@ FM_ERR_CODE  FM_WriteFirmwareSubPackage(const char *part_name, uint8_t *data, ui
     ASSERT(data != NULL);
     ASSERT(pkg_size != 0);
 
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     part = GET_FLASH_OBJECT(part_name);
     if (part == NULL)
@@ -530,7 +530,7 @@ FM_ERR_CODE  FM_CheckFirmwareIntegrity(uint32_t addr)
     FM_ERR_CODE  fw_integrity = FM_ERR_JUMP_TO_APP_ERR;
 #if (IS_ENABLE_SPI_FLASH)
     uint32_t *data = NULL;
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
 #endif
     
     BSP_Printf("0x%.8X address data: 0x%.8X\r\n", addr, value);
@@ -663,7 +663,7 @@ uint8_t FM_IsNeedAutoUpdate(void)
 
 #if (USING_AUTO_UPDATE_PROJECT == VERSION_WRITE_TO_APP)
 
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     part = GET_FLASH_OBJECT(APP_PART_NAME);
     if (part == NULL)
@@ -739,7 +739,7 @@ FM_ERR_CODE  FM_ReadFirmwareHead(const char *part_name)
 {
     ASSERT(part_name != NULL);
 
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
 
     _Reset_Write();
 
@@ -776,8 +776,8 @@ FM_ERR_CODE  FM_UpdateToAPP(const char *from_part_name)
     uint32_t write_posit = 0;
     uint32_t need_read_size = FPK_LEAST_HANDLE_BYTE;
     FM_ERR_CODE result = FM_ERR_OK;
-    const struct FLASH_OBEJCT *app_part = NULL;
-    const struct FLASH_OBEJCT *firmware_part = NULL;
+    const struct FLASH_OBJECT *app_part = NULL;
+    const struct FLASH_OBJECT *firmware_part = NULL;
     
     app_part = GET_FLASH_OBJECT(APP_PART_NAME);
     if (app_part == NULL)
@@ -845,7 +845,7 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
 
     
     /* 将 download 分区首地址的数据读出，长度为片内 flash 最小擦除粒度 */
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     part = GET_FLASH_OBJECT(part_name);
     if (NULL == part)
@@ -899,7 +899,7 @@ FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
  */
 FM_ERR_CODE  FM_UpdateFirmwareVersion(const char *part_name)
 {
-    const struct FLASH_OBEJCT *part = NULL;
+    const struct FLASH_OBJECT *part = NULL;
     
     part = GET_FLASH_OBJECT(APP_PART_NAME);
     if (part == NULL)
@@ -962,7 +962,7 @@ static void _Reset_Write(void)
  * @param[in]  decrypt: 0: 固件包无加密。1: 固件包有加密
  * @retval FM_ERR_CODE
  */
-static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct FLASH_OBEJCT *part, 
+static FM_ERR_CODE  _Write_FirmwareSubPackage( const struct FLASH_OBJECT *part, 
                                                uint8_t  *data, 
                                                uint16_t pkg_size, 
                                                uint8_t  decrypt,
