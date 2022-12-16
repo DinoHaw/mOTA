@@ -1299,8 +1299,8 @@ static void _Bootloader_JumpToAPP(void)
     typedef void(*APP_MAIN_FUNC)(void);
     APP_MAIN_FUNC  APP_Main; 
     
-    uint32_t stack_addr    = *(volatile uint32_t *)APP_ADDRESS;
-    uint32_t reset_handler = *(volatile uint32_t *)(APP_ADDRESS + 4);
+    _stack_addr    = *(volatile uint32_t *)APP_ADDRESS;
+    _reset_handler = *(volatile uint32_t *)(APP_ADDRESS + 4);
 
     /* 设置所有时钟到默认状态，使用HSI时钟 */
     HAL_RCC_DeInit();
@@ -1323,10 +1323,12 @@ static void _Bootloader_JumpToAPP(void)
     /* 外设 deinit */
     HAL_DeInit();
     HAL_UART_DeInit(&huart1);
+    HAL_UART_DeInit(&huart3);
     HAL_DMA_DeInit(&hdma_usart1_rx);
+    HAL_DMA_DeInit(&hdma_usart1_tx);
     
     /* 设置主堆栈指针 */
-    __set_MSP(stack_addr);
+    __set_MSP(_stack_addr);
 
     /* 在 RTOS 工程，这条语句很重要，设置为特权级模式，使用 MSP 指针 */
     __set_CONTROL(0);
@@ -1335,7 +1337,7 @@ static void _Bootloader_JumpToAPP(void)
     SCB->VTOR = APP_ADDRESS;
 
     /* 跳转到 APP ，首地址是 MSP ，地址 +4 是复位中断服务程序地址 */
-    APP_Main = (APP_MAIN_FUNC)reset_handler;
+    APP_Main = (APP_MAIN_FUNC)_reset_handler;
     APP_Main();
 
 #endif

@@ -52,9 +52,6 @@
 #define BSP_INT_ENTER()
 #define BSP_INT_EXIT()
 
-//#define BSP_INT_EN()                        __set_FAULTMASK(0)
-//#define BSP_INT_DIS()                       __set_FAULTMASK(1)
-
 #define BSP_INT_EN()                        __enable_irq()
 #define BSP_INT_DIS()                       __disable_irq()
 

@@ -75,6 +75,10 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart2_rx;
+extern DMA_HandleTypeDef hdma_usart2_tx;
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
