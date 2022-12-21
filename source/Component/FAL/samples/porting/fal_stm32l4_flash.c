@@ -221,7 +221,6 @@ int write(long offset, const uint8_t *buf, size_t size)
     }
 #endif
 
-__exit:
     HAL_FLASH_Lock();
     
     if (status)

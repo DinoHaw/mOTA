@@ -49,10 +49,10 @@ enum {
 
 #define SFUD_FLASH_DEVICE_TABLE                                                 \
 {                                                                               \
-   [SFUD_W25Q128_DEVICE_INDEX] = {.name = "W25Q128JV", .spi.name = "SPI2"},     \
+    [SFUD_W25Q128_DEVICE_INDEX] = {.name = "W25Q128JV", .spi.name = "SPI2"},     \
 }
 
 /* 开启后，SFUD 也将支持使用 QSPI 总线连接的 Flash。 */
-//#define SFUD_USING_QSPI
+#define SFUD_USING_QSPI
 
 #endif /* _SFUD_CFG_H_ */

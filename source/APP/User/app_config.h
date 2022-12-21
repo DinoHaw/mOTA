@@ -46,7 +46,7 @@
                                             |(BOOT_VERSION_SUB))
 
 /* 定义项 */
-#define RTOS_USING_NONE                     0                   /* 不使用RTOS */
+#define RTOS_USING_NONE                     0                   /* 不使用 RTOS */
 #define RTOS_USING_RTTHREAD                 1                   /* RT-Thread */
 #define RTOS_USING_UCOS                     2                   /* uC/OS */
 
@@ -54,10 +54,10 @@
 /* 配置选项 */
 #define ENABLE_ASSERT                       0                   /* 是否使能函数入口参数检查 */
 #define ENABLE_DEBUG_PRINT                  0                   /* 是否使能调试信息打印 */
-#define EANBLE_PRINTF_USING_RTT             1                   /* BSP_Print函数是否使用SEGGER RTT作为输出端口 */
+#define EANBLE_PRINTF_USING_RTT             0                   /* BSP_Print 函数是否使用 SEGGER RTT 作为输出端口 */
 
 #define USING_RTOS_TYPE                     RTOS_USING_NONE
-#define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTT的打印端口 */
+#define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTT 的打印端口 */
 #define MAX_NAME_LEN                        8
 
 
@@ -96,9 +96,9 @@
 #define DOWNLOAD_PART_NAME                  "download"
 #define FACTORY_PART_NAME                   "factory"
 
-#define ONCHIP_FLASH_END_ADDRESS            ((uint32_t)(FLASH_BASE + ONCHIP_FLASH_SIZE))            /* 片内flash末地址 */
-#define APP_ADDRESS                         ((uint32_t)(FLASH_BASE + BOOTLOADER_SIZE))              /* APP分区起始地址 */
-#define DOWNLOAD_ADDRESS                    ((uint32_t)(APP_ADDRESS + APP_PART_SIZE))               /* download分区起始地址 */
-#define FACTORY_ADDRESS                     ((uint32_t)(DOWNLOAD_ADDRESS + DOWNLOAD_PART_SIZE))     /* factory分区起始地址 */
+#define ONCHIP_FLASH_END_ADDRESS            ((uint32_t)(FLASH_BASE + ONCHIP_FLASH_SIZE))            /* 片内 flash 末地址 */
+#define APP_ADDRESS                         ((uint32_t)(FLASH_BASE + BOOTLOADER_SIZE))              /* APP 分区起始地址 */
+#define DOWNLOAD_ADDRESS                    ((uint32_t)(APP_ADDRESS + APP_PART_SIZE))               /* download 分区起始地址 */
+#define FACTORY_ADDRESS                     ((uint32_t)(DOWNLOAD_ADDRESS + DOWNLOAD_PART_SIZE))     /* factory 分区起始地址 */
 
 #endif

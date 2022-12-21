@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.3
+ * Version:         v1.0.4
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -41,6 +41,9 @@
  *                             6. 增加是否判断固件包超过分区大小的选项
  * 2022-12-07     Dino         增加对 STM32L4 的支持
  * 2022-12-08     Dino         增加固件包可放置在 SPI flash 的功能
+ * 2022-12-21     Dino         1. 修复一些配置选项的编译问题
+ *                             2. 增加更多的 user_config.h 配置参数的合法性判断
+ *                             3. 将 user_config.h 配置参数的合法性判断移动至 app.h
  */
 
 #ifndef __APP_H__
@@ -128,6 +131,95 @@ struct FIRMWARE_UPDATE_INFO
     
     uint8_t total_progress;                         /* 固件更新的总进度， 0-100 */
 };
+
+
+/* 一些配置参数的错误检查 */
+#if (ONCHIP_FLASH_SIZE == 0)
+#error "The ONCHIP_FLASH_SIZE cannot be 0."
+#endif
+
+#if (APP_PART_SIZE == 0)
+#error "The APP_PART_SIZE cannot be 0."
+#endif
+
+#if (USING_PART_PROJECT > ONE_PART_PROJECT)
+    #if (DOWNLOAD_PART_SIZE == 0)
+    #error "The DOWNLOAD_PART_SIZE cannot be 0."
+    #endif
+#endif
+
+#if (USING_PART_PROJECT > DOUBLE_PART_PROJECT)
+    #if (FACTORY_PART_SIZE == 0)
+    #error "The FACTORY_PART_SIZE cannot be 0."
+    #endif
+#endif
+
+#if (APP_PART_SIZE + DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE) > ONCHIP_FLASH_SIZE
+#error "APP_PART_SIZE + DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+#endif
+
+#if (USING_PART_PROJECT < ONE_PART_PROJECT || USING_PART_PROJECT > TRIPLE_PART_PROJECT)
+#error "The USING_PART_PROJECT option is out of range."
+#endif
+
+#if (USING_IS_NEED_UPDATE_PROJECT < USING_HOST_CMD_UPDATE ||    \
+     USING_IS_NEED_UPDATE_PROJECT > USING_APP_SET_FLAG_UPDATE)
+#error "The USING_IS_NEED_UPDATE_PROJECT option is out of range."
+#endif
+
+#if (USING_AUTO_UPDATE_PROJECT < DO_NOT_AUTO_UPDATE || USING_AUTO_UPDATE_PROJECT > VERSION_WRITE_TO_APP)
+#error "The USING_AUTO_UPDATE_PROJECT option is out of range."
+#endif
+
+#if (USING_APP_SAFETY_CHECK_PROJECT < DO_NOT_CHECK || USING_APP_SAFETY_CHECK_PROJECT > DO_NOT_DO_ANYTHING)
+#error "The USING_APP_SAFETY_CHECK_PROJECT option is out of range."
+#endif
+
+#if (FACTORY_NO_FIRMWARE_SOLUTION < JUMP_TO_APP || FACTORY_NO_FIRMWARE_SOLUTION > WAIT_FOR_NEW_FIRMWARE)
+#error "The FACTORY_NO_FIRMWARE_SOLUTION option is out of range."
+#endif
+
+#ifndef WAIT_HOST_DATA_MAX_TIME
+#error "The WAIT_HOST_DATA_MAX_TIME undefined."
+#endif
+
+#if (WAIT_HOST_DATA_MAX_TIME == 0)
+#error "The WAIT_HOST_DATA_MAX_TIME cannot be 0."
+#endif
+
+#if (USING_IS_NEED_UPDATE_PROJECT == USING_APP_SET_FLAG_UPDATE)
+    #if (FIRMWARE_UPDATE_MAGIC_WORD == 0)
+    #error "The FIRMWARE_UPDATE_MAGIC_WORD cannot be 0."
+    #endif
+    #if (FIRMWARE_RECOVERY_MAGIC_WORD == 0)
+    #error "The FIRMWARE_RECOVERY_MAGIC_WORD cannot be 0."
+    #endif
+    #if (BOOTLOADER_RESET_MAGIC_WORD == 0)
+    #error "The BOOTLOADER_RESET_MAGIC_WORD cannot be 0."
+    #endif
+#endif
+
+#if (ONCHIP_FLASH_ONCE_WRITE_BYTE == 0)
+#error "The ONCHIP_FLASH_ONCE_WRITE_BYTE cannot be 0."
+#endif
+
+#if (ENABLE_FACTORY_FIRMWARE_BUTTON)
+    #if (FACTORY_FIRMWARE_BUTTON_TIME == 0)
+    #error "The FACTORY_FIRMWARE_BUTTON_TIME cannot be 0."
+    #endif
+#endif
+
+#if (USING_AUTO_UPDATE_PROJECT == MODIFY_DOWNLOAD_PART_PROJECT)
+    #if (ONCHIP_FLASH_ERASE_GRANULARITY == 0)
+    #error "The ONCHIP_FLASH_ERASE_GRANULARITY cannot be 0."
+    #endif
+#endif
+
+#if (IS_ENABLE_SPI_FLASH)
+    #if (SPI_FLASH_ERASE_GRANULARITY == 0)
+    #error "The SPI_FLASH_ERASE_GRANULARITY cannot be 0."
+    #endif
+#endif
 
 #endif
 

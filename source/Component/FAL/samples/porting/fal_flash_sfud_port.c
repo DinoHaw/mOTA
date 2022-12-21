@@ -45,7 +45,7 @@ struct fal_flash_dev spi_flash1 =
 {
     .name      = FAL_SPI_FLASH_DEV_NAME, 
     .addr      = 0, 
-    .len       = 16 * 1024 * 1024, 
+    .len       = SPI_FLASH_SIZE, 
     .blk_size  = SPI_FLASH_ERASE_GRANULARITY, 
 
     .ops.init  = init,
@@ -73,6 +73,11 @@ static int init(void)
         log_e("FAL Flash initialize failed.\r\n");
         return -1;
     }
+
+#if defined(FAL_USING_SFUD_PORT)
+    /* enable qspi fast read mode, set four data lines width */
+    sfud_qspi_fast_read_enable(sfud_spi_flash1, 4);
+#endif
 
     /* update the flash chip information */
     spi_flash1.blk_size = sfud_spi_flash1->chip.erase_gran;

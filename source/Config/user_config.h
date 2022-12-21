@@ -40,6 +40,7 @@
  * 2022-12-07     Dino         增加 ONCHIP_FLASH_ONCE_WRITE_BYTE 配置项
  * 2022-12-08     Dino         1. 增加固件包可放置在 SPI flash 的功能
  *                             2. 增加 ENABLE_FACTORY_UPDATE_TO_APP 配置项
+ * 2022-12-21     Dino         增加 SPI_FLASH_SIZE 配置项
  */
 
 /**
@@ -72,11 +73,11 @@
  *    ！！！片内 Flash 需进行页对齐， 分区首地址必须是 Flash 的 每个独立 page 或 sector 的首地址，否则固件无法运行！！！
  *    ！！！放置在 SPI Flash 的分区至少需要最小擦写粒度的整数倍为单位进行对齐，建议以 sector 的整数倍为单位进行对齐！！！
  */
-#define ONCHIP_FLASH_SIZE                   ((uint32_t)(512 * 1024))    /* 片上 flash 容量，单位: byte */
-#define BOOTLOADER_SIZE                     ((uint32_t)(32 * 1024))     /* 预留给 bootloader 的空间，单位: byte（最小需要大于本工程编译后的大小） */
-#define APP_PART_SIZE                       ((uint32_t)(32 * 1024))     /* 预留给 APP 分区的空间，单位: byte（注意页对齐） */
-#define DOWNLOAD_PART_SIZE                  (APP_PART_SIZE)             /* 预留给 download 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
-#define FACTORY_PART_SIZE                   (APP_PART_SIZE)             /* 预留给 factory 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
+#define ONCHIP_FLASH_SIZE                   (512 * 1024)        /* 片上 flash 容量，单位: byte */
+#define BOOTLOADER_SIZE                     (32 * 1024)         /* 预留给 bootloader 的空间，单位: byte（最小需要大于本工程编译后的大小） */
+#define APP_PART_SIZE                       (32 * 1024)         /* 预留给 APP 分区的空间，单位: byte（注意页对齐） */
+#define DOWNLOAD_PART_SIZE                  (APP_PART_SIZE)     /* 预留给 download 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
+#define FACTORY_PART_SIZE                   (APP_PART_SIZE)     /* 预留给 factory 分区的空间，单位: byte（注意页对齐，不使用时，写0） */
 
 
 /**
@@ -150,16 +151,16 @@
  *        0: 不启用
  *        1: 启用
  *    FACTORY_FIRMWARE_BUTTON_PRESS 选项: 
- *        KEY_PRESS_LOW:  表示按下时为低电平
- *        KEY_PRESS_HIGH: 表示按下时为高电平
+ *        KEY_PRESS_LOW:  表示按键按下时 MCU 检测到的为低电平
+ *        KEY_PRESS_HIGH: 表示按键按下时 MCU 检测到的为高电平
  *    FACTORY_FIRMWARE_BUTTON_TIME 选项: 
  *        按键长按的持续时间，单位 ms ，不能大于 65535
  */ 
 #if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
 #define ENABLE_FACTORY_FIRMWARE_BUTTON      0
 #define FACTORY_FIRMWARE_BUTTON_PRESS       KEY_PRESS_LOW
-#define FACTORY_FIRMWARE_BUTTON_TIME        3000
 #endif
+#define FACTORY_FIRMWARE_BUTTON_TIME        3000
 
 
 /**
@@ -335,12 +336,12 @@
  *    STORE_IN_SPI_FLASH    或 1
  */
 #if (USING_PART_PROJECT > ONE_PART_PROJECT)
-#define DOWNLOAD_PART_LOCATION              STORE_IN_SPI_FLASH
+#define DOWNLOAD_PART_LOCATION              STORE_IN_ONCHIP_FLASH
 #if (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
-#define FACTORY_PART_LOCATION               STORE_IN_SPI_FLASH
+#define FACTORY_PART_LOCATION               STORE_IN_ONCHIP_FLASH
 #endif
 
-/* ！！！不要修改 ENABLE_SPI_FLASH 和 IS_ENABLE_SPI_FLASH 的值！！！ */
+/* 不要修改 IS_ENABLE_SPI_FLASH 的值 */
 #if (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH || FACTORY_PART_LOCATION == STORE_IN_SPI_FLASH)
 #define ENABLE_SPI_FLASH                    1
 #define IS_ENABLE_SPI_FLASH                 1
@@ -356,6 +357,7 @@
  *       其会被读到的 SFDP 更新 
  */
 #if (IS_ENABLE_SPI_FLASH)
+#define SPI_FLASH_SIZE                      (16 * 1024 * 1024)
 #define SPI_FLASH_ERASE_GRANULARITY         4096
 #endif
 

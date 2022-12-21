@@ -497,7 +497,7 @@ void BSP_Printf(const char *fmt, ...)
  */
 inline uint32_t BSP_UART_Port_GetOneByte(struct UART_STRUCT *uart)
 {
-    return uart->handle.Instance->DR;
+    return uart->handle.Instance->RDR;
 }
 
 

@@ -33,7 +33,7 @@
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
- * 2022-12-08     Dino         Ôö¼Ó¹Ì¼ş°ü¿É·ÅÖÃÔÚ SPI flash µÄ¹¦ÄÜ
+ * 2022-12-08     Dino         å¢åŠ å›ºä»¶åŒ…å¯æ”¾ç½®åœ¨ SPI flash çš„åŠŸèƒ½
  */
 
 #ifndef __BSP_FLASH_H__

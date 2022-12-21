@@ -43,7 +43,7 @@
 #include "data_transfer.h"
 
 /* 是否使能断帧检测 */
-#define DT_ENABLE_BROKEN_FRAME_DETECT   0
+#define DT_ENABLE_BROKEN_FRAME_DETECT   1
 
 #define BROKEN_FRAME_INTERVAL_TIME      100         /* 断帧间隔时间判断，单位 ms */
 

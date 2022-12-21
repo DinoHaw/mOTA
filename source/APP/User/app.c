@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.3
+ * Version:         v1.0.4
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -41,32 +41,14 @@
  *                             6. 增加是否判断固件包超过分区大小的选项
  * 2022-12-07     Dino         增加对 STM32L4 的支持
  * 2022-12-08     Dino         增加固件包可放置在 SPI flash 的功能
+ * 2022-12-21     Dino         1. 修复一些配置选项的编译问题
+ *                             2. 增加更多的 user_config.h 配置参数的合法性判断
+ *                             3. 将 user_config.h 配置参数的合法性判断移动至 app.h
  */
 
 
 /* Includes ------------------------------------------------------------------*/
 #include "app.h"
-
-#if (USING_PART_PROJECT < ONE_PART_PROJECT || USING_PART_PROJECT > TRIPLE_PART_PROJECT)
-#error "The USING_PART_PROJECT option is out of range."
-#endif
-
-#if (USING_IS_NEED_UPDATE_PROJECT < USING_HOST_CMD_UPDATE ||    \
-     USING_IS_NEED_UPDATE_PROJECT > USING_APP_SET_FLAG_UPDATE)
-#error "The USING_IS_NEED_UPDATE_PROJECT option is out of range."
-#endif
-
-#if (USING_AUTO_UPDATE_PROJECT < DO_NOT_AUTO_UPDATE || USING_AUTO_UPDATE_PROJECT > VERSION_WRITE_TO_APP)
-#error "The USING_AUTO_UPDATE_PROJECT option is out of range."
-#endif
-
-#if (USING_APP_SAFETY_CHECK_PROJECT < DO_NOT_CHECK || USING_APP_SAFETY_CHECK_PROJECT > DO_NOT_DO_ANYTHING)
-#error "The USING_APP_SAFETY_CHECK_PROJECT option is out of range."
-#endif
-
-#if (FACTORY_NO_FIRMWARE_SOLUTION < JUMP_TO_APP || FACTORY_NO_FIRMWARE_SOLUTION > WAIT_FOR_NEW_FIRMWARE)
-#error "The FACTORY_NO_FIRMWARE_SOLUTION option is out of range."
-#endif
 
 
 /* Private variables ---------------------------------------------------------*/
@@ -163,18 +145,8 @@ void System_Init(void)
 #endif
 
     /* TODO: 此处的 ASSERT 最佳实现方式应为编译阶段即可报错，但尚未找到好的实现方法 */
-    ASSERT(USING_PART_PROJECT >= ONE_PART_PROJECT && USING_PART_PROJECT <= TRIPLE_PART_PROJECT);
     ASSERT(sizeof(AES256_KEY) != 32);
     ASSERT(sizeof(AES256_IV) != 16);
-
-    ASSERT(ONCHIP_FLASH_SIZE > 0);
-    ASSERT(APP_PART_SIZE > 0);
-#if (USING_PART_PROJECT > ONE_PART_PROJECT)
-    ASSERT(DOWNLOAD_PART_SIZE > 0);
-#endif
-#if (USING_PART_PROJECT > DOUBLE_PART_PROJECT)
-    ASSERT(FACTORY_PART_SIZE > 0);
-#endif
 }
 
 
@@ -191,7 +163,7 @@ void APP_Init(void)
     SEGGER_RTT_ConfigDownBuffer(SEGGER_RTT_PRINTF_TERMINAL, "RTTDOWN", NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
     SEGGER_RTT_SetTerminal(SEGGER_RTT_PRINTF_TERMINAL);
     #else
-    BSP_UART_Init( BSP_UART1 );
+    BSP_UART_Init( BSP_UART3 );
     #endif
 
     uint32_t hal_version = HAL_GetHalVersion();
@@ -203,8 +175,8 @@ void APP_Init(void)
     #if (IS_ENABLE_SPI_FLASH)
     BSP_Printf("FAL Version: V%s\r\n", FAL_SW_VERSION);
     BSP_Printf("SFUD Version: V%s\r\n", SFUD_SW_VERSION);
-    #endif
     BSP_Printf("perf_counter version: V%d.%d.%d\r\n", __PERF_COUNTER_VER_MAJOR__, __PERF_COUNTER_VER_MINOR__, __PERF_COUNTER_VER_REVISE__);
+    #endif
 #endif
 
 #if (ENABLE_FACTORY_FIRMWARE_BUTTON)
@@ -242,6 +214,8 @@ void APP_Init(void)
     DT_Init(&_data_if, BSP_UART1, _dev_rx_buff, &_dev_rx_len, PP_MSG_BUFF_SIZE + 16);
     PP_Init(_UART_SendData, NULL, _Bootloader_ProtocolDataHandle, _Bootloader_SetReplyInfo);
     FM_Init();
+    
+    BSP_Printf("FLASH_BANK_SIZE: 0x%.8X\r\r", FLASH_BANK_SIZE);
 }
 
 
@@ -286,13 +260,14 @@ void APP_Running(void)
             /* 暂存和校验固件包头的流程，此时，已进入固件更新的开始阶段 */
             case EXE_FLOW_VERIFY_FIRMWARE_HEAD:
             {
-                _fw_update_info.cmd_exe_err_code = PP_ERR_OK;
-                
-                /* 取出固件包头中的分区名 */
                 struct FPK_HEAD *p_fpk_head = (struct FPK_HEAD *)_fw_head_data;
-                part_name = p_fpk_head->part_name;
+                
+                _fw_update_info.cmd_exe_err_code = PP_ERR_OK;
 
             #if (USING_PART_PROJECT > ONE_PART_PROJECT)
+                /* 取出固件包头中的分区名 */
+                part_name = p_fpk_head->part_name;
+                
                 #if (ENABLE_AUTO_CORRECT_PART)
                 /* 自动将固件包指定的 APP 分区修正为 download 分区 */
                 if (strncmp(part_name, APP_PART_NAME, MAX_NAME_LEN) == 0)
@@ -1389,10 +1364,13 @@ static void _Bootloader_JumpToAPP(void)
         NVIC->ICPR[i] = 0xFFFFFFFF;
     }
 
-    /* 外设 deinit，需要自己添加 */
+    /* 外设 deinit ，需要自己根据实际使用的外设添加，建议使用 USING_APP_SET_FLAG_UPDATE 方式 */
     HAL_DeInit();
     HAL_UART_DeInit(&huart1);
+    HAL_UART_DeInit(&huart3);
     HAL_DMA_DeInit(&hdma_usart1_rx);
+    HAL_DMA_DeInit(&hdma_usart1_tx);
+    HAL_QSPI_DeInit(&hqspi);
     
     /* 设置主堆栈指针 */
     __set_MSP(_stack_addr);
@@ -1475,7 +1453,7 @@ static void _Timer_ScanKeyCallback(void *user_data)
  */
 static void _Timer_LedFlashCallback(void *user_data)
 {
-    HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
+    HAL_GPIO_TogglePin(R_LED_GPIO_Port, R_LED_Pin);
 }
 
 

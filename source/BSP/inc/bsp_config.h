@@ -37,14 +37,14 @@
 
 /* UART相关 */
 #define BSP_PRINTF_BUFF_SIZE                256                 /* BSP_Print的临时缓存区大小 */
-#define BSP_PRINTF_HANDLE                   UART(1)             /* 用于执行BSP_Print的UART句柄 */
+#define BSP_PRINTF_HANDLE                   UART(3)             /* 用于执行BSP_Print的UART句柄 */
 
 #define BSP_UART_BUFF_SIZE                  64                 /* UART数据一级缓存的大小 */
 
 #define BSP_USING_UART1                     1
 #define BSP_USING_UART2                     0
 #define BSP_USING_UART2_RE                  0
-#define BSP_USING_UART3                     0
+#define BSP_USING_UART3                     1
 #define BSP_USING_UART3_RE                  0
 #define BSP_USING_UART4                     0
 #define BSP_USING_UART5                     0

@@ -42,6 +42,8 @@
  * minimum erase granularity (sector size).
  */
 
+#if defined(FAL_USING_SFUD_PORT)
+
 #ifdef SFUD_USING_SFDP
 
 /* support maximum SFDP major revision by driver */
@@ -385,3 +387,5 @@ size_t sfud_sfdp_get_suitable_eraser(const sfud_flash *flash, uint32_t addr, siz
 }
 
 #endif /* SFUD_USING_SFDP */
+
+#endif /* #if defined(FAL_USING_SFUD_PORT) */

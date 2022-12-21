@@ -66,6 +66,7 @@
 #if (IS_ENABLE_SPI_FLASH)
 #include "fal.h"
 #include "sfud.h"
+#include "perf_counter.h"
 #endif
 #if (ENABLE_DECRYPT)
 #include "aes.h"
@@ -74,7 +75,6 @@
 #include "SEGGER_RTT.h"
 #endif
 #include "crcLib.h"
-#include "perf_counter.h"
 
 
 //! \note for IAR
