@@ -2,7 +2,7 @@
 # mOTA
 
 ### 一、简介
-&emsp;&emsp;本开源工程是一款专为 32 位 MCU 开发的 OTA 组件，组件包含了 **[bootloader](https://gitee.com/DinoHaw/mOTA/tree/master/source)** **、固件打包器** **([Firmware_Packager](https://gitee.com/DinoHaw/firmware_packager))** **、固件发送器** 三部分，并提供了基于多款 MCU (STM32F1 / STM32F407 / STM43F411 / STM32L4) 和 YModem-1K 协议的案例，因此本案例的固件发送器名为 **[YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender)** 。同时也提供了使用 SPI Flash 和 QSPI Flash 的案例。
+&emsp;&emsp;本开源工程是一款专为 32 位 MCU 开发的 OTA 组件，组件包含了 **[bootloader](https://gitee.com/DinoHaw/mOTA/tree/master/source)** **、固件打包器** **([Firmware_Packager](https://gitee.com/DinoHaw/firmware_packager))** **、固件发送器** 三部分，并提供了基于多款 MCU (STM32F1 / STM32F407 / STM32F411 / STM32L4) 和 YModem-1K 协议的案例，因此本案例的固件发送器名为 **[YModem_Sender](https://gitee.com/DinoHaw/mOTA/tree/master/tools/YModem_Sender)** 。同时也提供了使用 SPI Flash 和 QSPI Flash 的案例。
 
 &emsp;&emsp;mOTA 中的 m 可意为 mini 、 micro 、 MCU ( Microcontroller Unit )，而 OTA ( Over-the-Air Technology )，即空中下载技术，根据[维基百科](https://zh.m.wikipedia.org/wiki/%E7%A9%BA%E4%B8%AD%E7%BC%96%E7%A8%8B)的定义， OTA 是一种为设备分发新软件、配置，乃至更新加密密钥（为例如移动电话、数字视频转换盒或安全语音通信设备——加密的双向无线电）的方法。 OTA 的一项重要特征是，一个中心位置可以向所有用户发送更新，其不能拒绝、破坏或改变该更新，并且该更新为立即应用到频道上的每个人。用户有可能“拒绝” OTA 更新，但频道管理者也可以将其踢出频道。由此可得出 OTA 技术几个主要的特性：
 1.  一个中心可向多个设备分发更新资料（固件）；
