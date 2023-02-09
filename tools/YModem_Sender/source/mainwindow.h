@@ -36,6 +36,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QDebug>
 #include <QLabel>
 #include "serial_port.h"
 #include "ymodem.h"
