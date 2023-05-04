@@ -29,12 +29,13 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.2
+ * Version:         v1.0.3
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
  * 2022-12-07     Dino         修复 STM32L4 写入 flash 的最小单位问题
  * 2022-12-10     Dino         增加对 SPI flash 的支持
+ * 2023-05-04     Dino         修复 AES 库已被其它函数使用而导致固件包解密错误的问题
  */
 
 
@@ -798,6 +799,12 @@ FM_ERR_CODE  FM_UpdateToAPP(const char *from_part_name)
 
     /* 读取加密选项 */
     decrypt = FM_IsEncrypt();
+
+#if (ENABLE_DECRYPT)
+    /* 当有固件包需要刷入 APP 分区时，每次都需要对 AES 进行初始化，存在 AES 库已被其它函数使用的情况 */
+    if (decrypt)
+        AES_init_ctx_iv(&_aes_ctx, (uint8_t *)AES256_KEY, (uint8_t *)AES256_IV);
+#endif
 
     for (write_posit = 0; write_posit < _fpk_head.pkg_size; )
     {
