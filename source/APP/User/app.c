@@ -29,7 +29,7 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.4
+ * Version:         v1.0.5
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
@@ -44,6 +44,7 @@
  * 2022-12-21     Dino         1. 修复一些配置选项的编译问题
  *                             2. 增加更多的 user_config.h 配置参数的合法性判断
  *                             3. 将 user_config.h 配置参数的合法性判断移动至 app.h
+ * 2023-05-04     Dino         修复在 YModem 协议下，进入需要主机下发固件包的流程时需要主动上发字符 'C' 的问题
  */
 
 
@@ -239,6 +240,13 @@ void APP_Running(void)
         /* 应用执行流程状态机 */
         switch (_fw_update_info.exe_flow)
         {
+            /* 需要主机下发固件包，对应 YModem 协议，需要 */
+            case EXE_FLOW_NEED_HOST_SEND_FIRMWARE:
+            {
+                PP_Config(PP_CONFIG_RESET, NULL);
+                _Bootloader_SetExeFlow(EXE_FLOW_WAIT_FIRMWARE);
+                break;
+            }
         #if (USING_PART_PROJECT > ONE_PART_PROJECT)
             /* 无须更新固件 或 更新固件过程中等待主机指令超时 或 更新失败时 的处理逻辑 */
             case EXE_FLOW_FIND_RUNNING_FIRMWARE:
