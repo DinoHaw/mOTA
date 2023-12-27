@@ -38,60 +38,60 @@
 
 
 /* Private variables ---------------------------------------------------------*/
-/* ¹Ì¼ş¸üĞÂµÄ±êÖ¾Î»£¬¸Ã±êÖ¾Î»²»ÄÜ±»ÇåÁã */
-#if (USING_IS_NEED_UPDATE_PROJECT == USING_APP_SET_FLAG_UPDATE)
-    #if defined(__IS_COMPILER_ARM_COMPILER_5__)
-    volatile uint64_t update_flag __attribute__((at(FIRMWARE_UPDATE_VAR_ADDR), zero_init));
+/* å›ºä»¶æ›´æ–°çš„æ ‡å¿—ä½ï¼Œè¯¥æ ‡å¿—ä½ä¸èƒ½è¢«æ¸…é›¶ */
+#if defined(__IS_COMPILER_ARM_COMPILER_5__)
+volatile uint64_t update_flag __attribute__((at(FIRMWARE_UPDATE_VAR_ADDR), zero_init));
 
-    #elif defined(__IS_COMPILER_ARM_COMPILER_6__)
-        #define __INT_TO_STR(x)     #x
-        #define INT_TO_STR(x)       __INT_TO_STR(x)
-        volatile uint64_t update_flag __attribute__((section(".bss.ARM.__at_" INT_TO_STR(FIRMWARE_UPDATE_VAR_ADDR))));
+#elif defined(__IS_COMPILER_ARM_COMPILER_6__)
+    #define __INT_TO_STR(x)     #x
+    #define INT_TO_STR(x)       __INT_TO_STR(x)
+    volatile uint64_t update_flag __attribute__((section(".bss.ARM.__at_" INT_TO_STR(FIRMWARE_UPDATE_VAR_ADDR))));
 
-    #else
-        #error "variable placement not supported for this compiler."
-    #endif
+#else
+    #error "variable placement not supported for this compiler."
 #endif
 
-static struct KEY_STRUCT _key0;         /* °´¼ü¶ÔÏó */
-static struct KEY_STRUCT _key1;         /* °´¼ü¶ÔÏó */
-static struct BSP_TIMER  _timer_led;    /* LEDµÄÉÁË¸timer */
+static struct BSP_KEY _key0;            /* æŒ‰é”®å¯¹è±¡ */
+static struct BSP_KEY _key1;            /* æŒ‰é”®å¯¹è±¡ */
+static struct BSP_TIMER  _timer_led;    /* LEDçš„é—ªçƒtimer */
 
 
 /* Private function prototypes -----------------------------------------------*/
 static void _APP_Reset(void);
 static uint8_t _Key0_GetLevel(void);
 static uint8_t _Key1_GetLevel(void);
-static void _Key_EventCallback(uint8_t id, enum KEY_EVENT  event);
+static void _Key_EventCallback(uint8_t id, KEY_EVENT  event);
 static void _Timer_LedFlashCallback(void *user_data);
 
 
 /* Exported functions ---------------------------------------------------------*/
 /**
- * @brief  ÍâÉè³õÊ¼»¯Ç°µÄÒ»Ğ©´¦Àí
- * @note   Ö´ĞĞµ½´Ë´¦£¬ÄÚºËÊ±ÖÓÒÑ³õÊ¼»¯
+ * @brief  å¤–è®¾åˆå§‹åŒ–å‰çš„ä¸€äº›å¤„ç†
+ * @note   æ‰§è¡Œåˆ°æ­¤å¤„ï¼Œå†…æ ¸æ—¶é’Ÿå·²åˆå§‹åŒ–
  * @retval None
  */
 void System_Init(void)
 {
-    /* ÉèÖÃÖĞ¶ÏÏòÁ¿±íºó£¬¿ªÆô×ÜÖĞ¶Ï */
-    extern int Image$$ER_IROM1$$Base;
-    BSP_INT_DIS();
-    SCB->VTOR = (uint32_t)&Image$$ER_IROM1$$Base;
-    BSP_INT_EN();
+    /* è®¾ç½®ä¸­æ–­å‘é‡è¡¨åï¼Œå¼€å¯æ€»ä¸­æ–­ */
+    __IRQ_SAFE 
+    {
+        extern int Image$$ER_IROM1$$Base;
+        SCB->VTOR = (uint32_t)&Image$$ER_IROM1$$Base;
+    }
+    __enable_irq();
 }
 
 
 /**
- * @brief  Ó¦ÓÃ³õÊ¼»¯
- * @note   ´ËÊ±ÍâÉèÒÑ¾­³õÊ¼»¯Íê±Ï
+ * @brief  åº”ç”¨åˆå§‹åŒ–
+ * @note   æ­¤æ—¶å¤–è®¾å·²ç»åˆå§‹åŒ–å®Œæ¯•
  * @retval None
  */
 void APP_Init(void)
 {
 #if (ENABLE_DEBUG_PRINT)
     #if (EANBLE_PRINTF_USING_RTT)
-    /* ÅäÖÃÍ¨µÀ0£¬ÏÂĞĞÅäÖÃ */
+    /* é…ç½®é€šé“0ï¼Œä¸‹è¡Œé…ç½® */
     SEGGER_RTT_ConfigDownBuffer(SEGGER_RTT_PRINTF_TERMINAL, "RTTDOWN", NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
     SEGGER_RTT_SetTerminal(SEGGER_RTT_PRINTF_TERMINAL);
     #else
@@ -106,7 +106,7 @@ void APP_Init(void)
     BSP_Printf("HAL Version: V%d.%d.%d.%d\r\n", (hal_version >> 24), (uint8_t)(hal_version >> 16), (uint8_t)(hal_version >> 8), (uint8_t)hal_version);
 #endif
     
-    /* BSP³õÊ¼»¯ */
+    /* BSPåˆå§‹åŒ– */
     BSP_Timer_Init( &_timer_led, 
                     _Timer_LedFlashCallback, 
                     500,
@@ -124,8 +124,8 @@ void APP_Init(void)
 
 
 /**
- * @brief  Ó¦ÓÃ¿ªÊ¼ÔËĞĞ
- * @note   APP_Running ±¾Éí¾ÍÔÚÒ»¸ö while Ñ­»·ÄÚ
+ * @brief  åº”ç”¨å¼€å§‹è¿è¡Œ
+ * @note   APP_Running æœ¬èº«å°±åœ¨ä¸€ä¸ª while å¾ªç¯å†…
  * @retval None
  */
 void APP_Running(void)
@@ -140,7 +140,7 @@ void APP_Running(void)
         if (time++ == 500)
         {
             time = 0;
-            BSP_Printf("[%d] hello human\r\n", count++);
+            BSP_Printf("[%d] app v%d.%d\r\n", count++, APP_VERSION_MAIN, APP_VERSION_SUB);
         }
         
         BSP_Delay(2);
@@ -150,7 +150,7 @@ void APP_Running(void)
 
 /* Private functions ---------------------------------------------------------*/
 /**
- * @brief  APP Èí¸´Î»µÄ´¦Àíº¯Êı
+ * @brief  APP è½¯å¤ä½çš„å¤„ç†å‡½æ•°
  * @note   
  * @retval None
  */
@@ -161,13 +161,13 @@ static inline void _APP_Reset(void)
 
 
 /**
- * @brief  °´¼üµÄÊÂ¼ş´¦Àí
+ * @brief  æŒ‰é”®çš„äº‹ä»¶å¤„ç†
  * @note   
- * @param[in]  id: °´¼üµÄ ID
- * @param[in]  event: °´¼üµÄÊÂ¼ş
+ * @param[in]  id: æŒ‰é”®çš„ ID
+ * @param[in]  event: æŒ‰é”®çš„äº‹ä»¶
  * @retval None
  */
-static void _Key_EventCallback(uint8_t id, enum KEY_EVENT  event)
+static void _Key_EventCallback(uint8_t id, KEY_EVENT  event)
 {
     BSP_Printf("[ key ] You just press the button[%d], event: %d\r\n\r\n", id, event);
     
@@ -191,9 +191,9 @@ static void _Key_EventCallback(uint8_t id, enum KEY_EVENT  event)
 
 
 /**
- * @brief  ¶ÁÈ¡ key0 µÄµçÆ½Öµ
+ * @brief  è¯»å– key0 çš„ç”µå¹³å€¼
  * @note   
- * @retval µçÆ½Öµ
+ * @retval ç”µå¹³å€¼
  */
 static uint8_t _Key0_GetLevel(void)
 {
@@ -202,9 +202,9 @@ static uint8_t _Key0_GetLevel(void)
 
 
 /**
- * @brief  ¶ÁÈ¡ key1 µÄµçÆ½Öµ
+ * @brief  è¯»å– key1 çš„ç”µå¹³å€¼
  * @note   
- * @retval µçÆ½Öµ
+ * @retval ç”µå¹³å€¼
  */
 static uint8_t _Key1_GetLevel(void)
 {
@@ -213,9 +213,9 @@ static uint8_t _Key1_GetLevel(void)
 
 
 /**
- * @brief  LEDÉÁË¸ÖÜÆÚÈÎÎñ
+ * @brief  LEDé—ªçƒå‘¨æœŸä»»åŠ¡
  * @note   
- * @param[in]  user_data: ÓÃ»§Êı¾İ
+ * @param[in]  user_data: ç”¨æˆ·æ•°æ®
  * @retval None
  */
 static void _Timer_LedFlashCallback(void *user_data)
@@ -225,10 +225,10 @@ static void _Timer_LedFlashCallback(void *user_data)
 
 
 /**
- * @brief  ²ÎÊı¼ì²é´íÎóÊ±µÄ´¦Àíº¯Êı
+ * @brief  å‚æ•°æ£€æŸ¥é”™è¯¯æ—¶çš„å¤„ç†å‡½æ•°
  * @note   
- * @param[in]  func: ´íÎó·¢ÉúµÄËùÔÚº¯Êı
- * @param[in]  line: ´íÎó·¢ÉúµÄËùÔÚcÎÄ¼şµÄĞĞÊı
+ * @param[in]  func: é”™è¯¯å‘ç”Ÿçš„æ‰€åœ¨å‡½æ•°
+ * @param[in]  line: é”™è¯¯å‘ç”Ÿçš„æ‰€åœ¨cæ–‡ä»¶çš„è¡Œæ•°
  * @retval None
  */
 void Assert_Failed(uint8_t *func, uint32_t line)
