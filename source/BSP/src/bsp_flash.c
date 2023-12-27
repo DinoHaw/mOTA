@@ -29,21 +29,26 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.1
  * Change Logs:
- * Date           Author       Notes
- * 2022-11-23     Dino         the first version
- * 2022-12-08     Dino         Ôö¼Ó¹Ì¼ş°ü¿É·ÅÖÃÔÚ SPI flash µÄ¹¦ÄÜ
+ * Version  Date           Author       Notes
+ * v1.0     2022-11-23     Dino         the first version
+ * v1.1     2022-12-08     Dino         å¢åŠ å›ºä»¶åŒ…å¯æ”¾ç½®åœ¨ SPI flash çš„åŠŸèƒ½
+ * v1.2     2023-12-10     Dino         å°† fal_onchip_flash.h åŸå‹æ”¾åœ¨æœ¬æ–‡ä»¶å£°æ˜
  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_flash.h"
-#include "fal_onchip_flash.h"
 
 
 #if (IS_ENABLE_SPI_FLASH == 0)
 /* Private variables ---------------------------------------------------------*/
 static struct BSP_FLASH *_part_head;
+
+
+/* Extern function prototypes ------------------------------------------------*/
+extern int read(long offset, uint8_t *buf, size_t size);
+extern int write(long offset, const uint8_t *buf, size_t size);
+extern int erase(long offset, size_t size);
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -52,12 +57,12 @@ static void _Flash_Add(struct BSP_FLASH *part);
 
 /* Exported functions ---------------------------------------------------------*/
 /**
- * @brief  ÄÚ²¿ flash ³õÊ¼»¯
+ * @brief  å†…éƒ¨ flash åˆå§‹åŒ–
  * @note   
- * @param[in]  part: flash ·ÖÇø¶ÔÏó
- * @param[in]  name: flash ·ÖÇøÃû³Æ
- * @param[in]  addr: flash ·ÖÇøÆğÊ¼µØÖ·
- * @param[in]  size: flash ·ÖÇø´óĞ¡£¬µ¥Î» byte
+ * @param[in]  part: flash åˆ†åŒºå¯¹è±¡
+ * @param[in]  name: flash åˆ†åŒºåç§°
+ * @param[in]  addr: flash åˆ†åŒºèµ·å§‹åœ°å€
+ * @param[in]  size: flash åˆ†åŒºå¤§å°ï¼Œå•ä½ byte
  * @retval None
  */
 void BSP_Flash_Init(struct BSP_FLASH *part, const char *name, uint32_t addr, uint32_t size)
@@ -73,13 +78,13 @@ void BSP_Flash_Init(struct BSP_FLASH *part, const char *name, uint32_t addr, uin
 
 
 /**
- * @brief  ¶ÁÈ¡ÄÚ²¿ flash
+ * @brief  è¯»å–å†…éƒ¨ flash
  * @note   
- * @param[in]   part: flash ·ÖÇø¶ÔÏó
- * @param[in]   relative_addr: ¶ÁÈ¡µÄÏà¶ÔµØÖ·
- * @param[out]  buff: ¶ÁÈ¡ºó´æ·ÅµÄÊı¾İ³Ø
- * @param[in]   size: ĞèÒª¶ÁÈ¡µÄ´óĞ¡£¬µ¥Î» byte
- * @retval -1: Ê§°Ü¡£ -2: Ö¸ÕëÎª¿Õ¡£·Ç 0 Öµ: ÒÑ¶ÁÈ¡µÄÊı¾İ³¤¶È£¬µ¥Î» byte
+ * @param[in]   part: flash åˆ†åŒºå¯¹è±¡
+ * @param[in]   relative_addr: è¯»å–çš„ç›¸å¯¹åœ°å€
+ * @param[out]  buff: è¯»å–åå­˜æ”¾çš„æ•°æ®æ± 
+ * @param[in]   size: éœ€è¦è¯»å–çš„å¤§å°ï¼Œå•ä½ byte
+ * @retval -1: å¤±è´¥ã€‚ -2: æŒ‡é’ˆä¸ºç©ºã€‚é 0 å€¼: å·²è¯»å–çš„æ•°æ®é•¿åº¦ï¼Œå•ä½ byte
  */
 int BSP_Flash_Read(const struct BSP_FLASH *part, uint32_t relative_addr, uint8_t *buff, uint32_t size)
 {
@@ -90,13 +95,13 @@ int BSP_Flash_Read(const struct BSP_FLASH *part, uint32_t relative_addr, uint8_t
 
 
 /**
- * @brief  Ğ´ÄÚ²¿ flash
- * @note   ´«ÈëµÄ buff ÖÁÉÙÊÇ flash ×îĞ¡Ğ´Èë byte µÄÕûÊı±¶£¬·ñÔò»á·¢ÉúÊı×éÒç³ö
- * @param[in]  part: flash ·ÖÇø¶ÔÏó
- * @param[in]  relative_addr: Ğ´ÈëµÄÏà¶ÔµØÖ·
- * @param[in]  buff: ÒªĞ´ÈëµÄÊı¾İ
- * @param[in]  size: ÒªĞ´ÈëµÄÊı¾İ´óĞ¡£¬µ¥Î» byte
- * @retval -1: Ê§°Ü¡£ -2: Ö¸ÕëÎª¿Õ¡£·Ç 0 Öµ: ÒÑĞ´ÈëµÄÊı¾İ³¤¶È£¬µ¥Î» byte
+ * @brief  å†™å†…éƒ¨ flash
+ * @note   ä¼ å…¥çš„ buff è‡³å°‘æ˜¯ flash æœ€å°å†™å…¥ byte çš„æ•´æ•°å€ï¼Œå¦åˆ™ä¼šå‘ç”Ÿæ•°ç»„æº¢å‡º
+ * @param[in]  part: flash åˆ†åŒºå¯¹è±¡
+ * @param[in]  relative_addr: å†™å…¥çš„ç›¸å¯¹åœ°å€
+ * @param[in]  buff: è¦å†™å…¥çš„æ•°æ®
+ * @param[in]  size: è¦å†™å…¥çš„æ•°æ®å¤§å°ï¼Œå•ä½ byte
+ * @retval -1: å¤±è´¥ã€‚ -2: æŒ‡é’ˆä¸ºç©ºã€‚é 0 å€¼: å·²å†™å…¥çš„æ•°æ®é•¿åº¦ï¼Œå•ä½ byte
  */
 inline int BSP_Flash_Write(const struct BSP_FLASH *part, uint32_t relative_addr, const uint8_t *buff, uint32_t size)
 {
@@ -107,12 +112,12 @@ inline int BSP_Flash_Write(const struct BSP_FLASH *part, uint32_t relative_addr,
 
 
 /**
- * @brief  ²Á³ıÄÚ²¿ flash
+ * @brief  æ“¦é™¤å†…éƒ¨ flash
  * @note   
- * @param[in]  part: flash ·ÖÇø¶ÔÏó
- * @param[in]  relative_addr: ²Á³ıµÄÏà¶ÔÆğÊ¼µØÖ·
- * @param[in]  size: Òª²Á³ıµÄ´óĞ¡£¬µ¥Î»: byte
- * @retval -1: Ê§°Ü¡£ -2: Ö¸ÕëÎª¿Õ¡£·Ç 0 Öµ: ÒÑ²Á³ıµÄÊı¾İ³¤¶È£¬µ¥Î»: byte
+ * @param[in]  part: flash åˆ†åŒºå¯¹è±¡
+ * @param[in]  relative_addr: æ“¦é™¤çš„ç›¸å¯¹èµ·å§‹åœ°å€
+ * @param[in]  size: è¦æ“¦é™¤çš„å¤§å°ï¼Œå•ä½: byte
+ * @retval -1: å¤±è´¥ã€‚ -2: æŒ‡é’ˆä¸ºç©ºã€‚é 0 å€¼: å·²æ“¦é™¤çš„æ•°æ®é•¿åº¦ï¼Œå•ä½: byte
  */
 inline int BSP_Flash_Erase(const struct BSP_FLASH *part, uint32_t relative_addr, uint32_t size)
 {
@@ -123,10 +128,10 @@ inline int BSP_Flash_Erase(const struct BSP_FLASH *part, uint32_t relative_addr,
 
 
 /**
- * @brief  Í¨¹ı flash ·ÖÇøÃû»ñÈ¡ flash ·ÖÇø¶ÔÏó
+ * @brief  é€šè¿‡ flash åˆ†åŒºåè·å– flash åˆ†åŒºå¯¹è±¡
  * @note   
- * @param[in]  part_name: flash ·ÖÇøÃû
- * @retval flash ·ÖÇø¶ÔÏó
+ * @param[in]  part_name: flash åˆ†åŒºå
+ * @retval flash åˆ†åŒºå¯¹è±¡
  */
 struct BSP_FLASH *BSP_Flash_GetHandle(const char *part_name)
 {
@@ -144,9 +149,9 @@ struct BSP_FLASH *BSP_Flash_GetHandle(const char *part_name)
 
 /* Private functions ---------------------------------------------------------*/
 /**
- * @brief  ½« flash ·ÖÇø¶ÔÏóÌí¼Ó½ø¹ÜÀíÁ´±í
+ * @brief  å°† flash åˆ†åŒºå¯¹è±¡æ·»åŠ è¿›ç®¡ç†é“¾è¡¨
  * @note   
- * @param[in]  part: flash ·ÖÇø¶ÔÏó
+ * @param[in]  part: flash åˆ†åŒºå¯¹è±¡
  * @retval None
  */
 static void _Flash_Add(struct BSP_FLASH *part)

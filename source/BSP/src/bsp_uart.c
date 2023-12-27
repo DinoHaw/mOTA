@@ -33,7 +33,7 @@
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
- * 2022-12-04     Dino         ÓÅ»¯ÖÐ¶Ï¿ª¹Ø
+ * 2022-12-04     Dino         ä¼˜åŒ–ä¸­æ–­å¼€å…³
  */
 
 
@@ -41,7 +41,25 @@
 #include "bsp_uart.h"
 
 
-/* Private variables ---------------------------------------------------------*/
+/* External function prototypes ----------------------------------------------*/
+extern void                 BSP_UART_Port_Init              (struct UART_STRUCT *uart, 
+                                                             UART_Callback_t rx_callback, 
+                                                             UART_Callback_t rx_idle_callback, 
+                                                             UART_Callback_t dma_rx_callback, 
+                                                             UART_Callback_t dma_tx_callback);
+extern BSP_UART_ERR         BSP_UART_Port_EnableReceive     (struct UART_STRUCT *uart);
+extern BSP_UART_ERR         BSP_UART_Port_DisableReceive    (struct UART_STRUCT *uart);
+extern BSP_UART_ERR         BSP_UART_Port_Send              (struct UART_STRUCT *uart, const uint8_t *data, uint16_t len, uint16_t timeout);
+extern uint32_t             BSP_UART_Port_GetDmaCounter     (struct UART_STRUCT *uart);
+extern uint32_t             BSP_UART_Port_GetOneByte        (struct UART_STRUCT *uart);
+extern struct UART_STRUCT * BSP_UART_Port_GetHandle         (BSP_UART_ID  id);
+
+/* é€šè®¯é” */
+//extern BSP_UART_ERR         BSP_UART_Port_LockInit          (struct UART_STRUCT *uart);
+extern BSP_UART_ERR         BSP_UART_Port_RxLock            (struct UART_STRUCT *uart);
+extern BSP_UART_ERR         BSP_UART_Port_RxUnlock          (struct UART_STRUCT *uart);
+extern BSP_UART_ERR         BSP_UART_Port_TxLock            (struct UART_STRUCT *uart);
+extern BSP_UART_ERR         BSP_UART_Port_TxUnlock          (struct UART_STRUCT *uart);
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,22 +71,24 @@ static void UART_TxHandler          (struct UART_STRUCT *uart);
 
 /* Exported functions ---------------------------------------------------------*/
 /**
- * @brief  UART ×é¼þ³õÊ¼»¯
- * @note   ½öÖ§³ÖÒÑÊµÏÖµÄ´®¿Ú
- * @param[in]  id: ´®¿Ú ID
+ * @brief  UART ç»„ä»¶åˆå§‹åŒ–
+ * @note   ä»…æ”¯æŒå·²å®žçŽ°çš„ä¸²å£
+ * @param[in]  id: ä¸²å£ ID
  * @retval BSP_UART_ERR
  */
 BSP_UART_ERR  BSP_UART_Init(BSP_UART_ID  id)
 {
-    /* GPIO/UART/DMA µÈµÄ³õÊ¼»¯´úÂëÒÑÓÉ cubeMX Éú³É */
+    /* GPIO/UART/DMA ç­‰çš„åˆå§‹åŒ–ä»£ç å·²ç”± cubeMX ç”Ÿæˆ */
 
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL)
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
     
-    if (uart->init)
-        return BSP_UART_ERR_NO_INIT;
+    if (uart->is_init) {
+        return BSP_UART_ERR_OK;
+    }
 
     BSP_UART_Port_Init( uart, 
                         UART_RxIntHandler, 
@@ -76,21 +96,19 @@ BSP_UART_ERR  BSP_UART_Init(BSP_UART_ID  id)
                         UART_CopyDataToUserBuff, 
                         UART_TxHandler);
     
-    BSP_INT_DIS();
-    uart->init = 1;
-    BSP_INT_EN();
+    uart->is_init = true;
 
     return BSP_UART_ERR_OK;
 }
 
 
 /**
- * @brief  Ê¹ÄÜUART½ÓÊÕÊý¾Ý
+ * @brief  ä½¿èƒ½UARTæŽ¥æ”¶æ•°æ®
  * @note   
- * @param[in]  id: ´®¿Ú ID
- * @param[in]  data: ½ÓÊÕµÄÊý¾Ý³Ø
- * @param[in]  len: Ö¸Ê¾½ÓÊÕÊý¾Ý³¤¶ÈµÄ±äÁ¿
- * @param[in]  max_len: Êý¾Ý³ØµÄ×î´óÈÝÁ¿£¬µ¥Î» byte
+ * @param[in]  id: ä¸²å£ ID
+ * @param[in]  data: æŽ¥æ”¶çš„æ•°æ®æ± 
+ * @param[in]  len: æŒ‡ç¤ºæŽ¥æ”¶æ•°æ®é•¿åº¦çš„å˜é‡
+ * @param[in]  max_len: æ•°æ®æ± çš„æœ€å¤§å®¹é‡ï¼Œå•ä½ byte
  * @retval BSP_UART_ERR
  */
 BSP_UART_ERR  BSP_UART_EnableReceive(BSP_UART_ID  id, uint8_t *data, uint16_t *len, uint16_t max_len)
@@ -100,8 +118,9 @@ BSP_UART_ERR  BSP_UART_EnableReceive(BSP_UART_ID  id, uint8_t *data, uint16_t *l
     BSP_UART_ERR ret;
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
 
-    if (uart == NULL)
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
 
     uart->rx_data         = data;
     uart->rx_data_len     = len;
@@ -109,30 +128,31 @@ BSP_UART_ERR  BSP_UART_EnableReceive(BSP_UART_ID  id, uint8_t *data, uint16_t *l
 
     ret = BSP_UART_Port_EnableReceive(uart);
     
-    BSP_INT_DIS();
-    uart->rx_init = 1;
-    BSP_INT_EN();
+    __IRQ_SAFE {
+        uart->is_rx_init = true;
+    }
 
     return ret;
 }
 
 
 /**
- * @brief  ½ûÖ¹ UART ½ÓÊÕÊý¾Ý
+ * @brief  ç¦æ­¢ UART æŽ¥æ”¶æ•°æ®
  * @note   
- * @param[in]  id: ´®¿Ú ID
+ * @param[in]  id: ä¸²å£ ID
  * @retval BSP_UART_ERR 
  */
 BSP_UART_ERR  BSP_UART_DisableReceive(BSP_UART_ID  id)
 {
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL)
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
     
-    BSP_INT_DIS();
-    uart->rx_init = 0;
-    BSP_INT_EN();
+    __IRQ_SAFE {
+        uart->is_rx_init = false;
+    }
     
     return BSP_UART_Port_DisableReceive(uart);
 }
@@ -140,17 +160,18 @@ BSP_UART_ERR  BSP_UART_DisableReceive(BSP_UART_ID  id)
 
 #if (USING_RTOS_TYPE)
 /**
- * @brief  µÈ´ý UART ½ÓÊÕµ½Ò»Ö¡Êý¾Ý
+ * @brief  ç­‰å¾… UART æŽ¥æ”¶åˆ°ä¸€å¸§æ•°æ®
  * @note   
- * @param[in]  id: ´®¿Ú ID
+ * @param[in]  id: ä¸²å£ ID
  * @retval BSP_UART_ERR 
  */
 BSP_UART_ERR  BSP_UART_WaitForData(BSP_UART_ID  id)
 {
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL)
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
     
     return BSP_UART_Port_RxLock(uart);
 }
@@ -158,46 +179,45 @@ BSP_UART_ERR  BSP_UART_WaitForData(BSP_UART_ID  id)
 
 
 /**
- * @brief  ÅÐ¶Ï UART ÊÇ·ñÊÕµ½ÁËÒ»Ö¡Êý¾Ý
- * @note   ¸Ã½Ó¿ÚÎªÂÖÑ¯µÄ·½Ê½
- * @param[in]  id: ´®¿Ú ID
+ * @brief  åˆ¤æ–­ UART æ˜¯å¦æ”¶åˆ°äº†ä¸€å¸§æ•°æ®
+ * @note   è¯¥æŽ¥å£ä¸ºè½®è¯¢çš„æ–¹å¼
+ * @param[in]  id: ä¸²å£ ID
  * @retval BSP_UART_ERR 
  */
 BSP_UART_ERR  BSP_UART_IsFrameEnd(BSP_UART_ID  id)
 {
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL)  
-        return BSP_UART_ERR_NOT_FOUND; 
+    if (uart == NULL) {
+        return BSP_UART_ERR_NOT_FOUND;
+    } 
 
-//    BSP_INT_DIS();
-    if (uart->idle_flag == 0)
+    if (uart->is_idle_int == false)
     {    
-//        BSP_INT_EN();
         return BSP_UART_ERR_NO_RECV_FRAME;
     }
     else
     {
-        uart->idle_flag = 0;
-//        BSP_INT_EN();
+        uart->is_idle_int = false;
         return BSP_UART_ERR_OK;
     }
 }
 
 
 /**
- * @brief  ¹ÒÔØÒ»¸öÓÃ»§×Ô¶¨ÒåµÄÊý¾Ýµ½ UART ¶ÔÏóÉÏ
+ * @brief  æŒ‚è½½ä¸€ä¸ªç”¨æˆ·è‡ªå®šä¹‰çš„æ•°æ®åˆ° UART å¯¹è±¡ä¸Š
  * @note   
- * @param[in]  id: ´®¿Ú ID
- * @param[in]  user_data: ÓÃ»§×Ô¶¨ÒåÊý¾Ý
+ * @param[in]  id: ä¸²å£ ID
+ * @param[in]  user_data: ç”¨æˆ·è‡ªå®šä¹‰æ•°æ®
  * @retval BSP_UART_ERR 
  */
 BSP_UART_ERR  BSP_UART_LinkUserData(BSP_UART_ID  id, void *user_data)
 {
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL) 
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
     
     uart->user_data = user_data;
     
@@ -206,18 +226,19 @@ BSP_UART_ERR  BSP_UART_LinkUserData(BSP_UART_ID  id, void *user_data)
 
 
 /**
- * @brief  ÉèÖÃ UART µÄ·¢ËÍÍê³ÉÖ¸Ê¾»Øµ÷º¯Êý
+ * @brief  è®¾ç½® UART çš„å‘é€å®ŒæˆæŒ‡ç¤ºå›žè°ƒå‡½æ•°
  * @note   
- * @param[in]  id: ´®¿Ú ID
- * @param[in]  TX_Complete: º¯ÊýÖ¸Õë
+ * @param[in]  id: ä¸²å£ ID
+ * @param[in]  TX_Complete: å‡½æ•°æŒ‡é’ˆ
  * @retval BSP_UART_ERR 
  */
 BSP_UART_ERR  BSP_UART_SetTxIndicate(BSP_UART_ID  id, uint8_t (*TX_Complete)(struct UART_STRUCT *uart))
 {
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL)
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
     
     uart->TX_Complete = TX_Complete;
     
@@ -226,12 +247,12 @@ BSP_UART_ERR  BSP_UART_SetTxIndicate(BSP_UART_ID  id, uint8_t (*TX_Complete)(str
 
 
 /**
- * @brief  ´Ó UART ·¢³öÒ»Ð©Êý¾Ý
- * @note   ÈôÊ¹ÓÃ RTOS £¬Ôò BSP_UART_Send¡¢ BSP_UART_SendBlocking ¾ù²»ÄÜÔÚÖÐ¶ÏÖÐÊ¹ÓÃ
- * @param[in]  id: ´®¿ÚID
- * @param[in]  data: Òª·¢ËÍµÄÊý¾Ý³Ø
- * @param[in]  len: Òª·¢ËÍµÄÊý¾Ý³¤¶È£¬µ¥Î» byte
- * @param[in]  timeout: ·¢ËÍ×î´ó³¬Ê±µÈ´ýÊ±¼ä£¬µ¥Î» ms
+ * @brief  ä»Ž UART å‘å‡ºä¸€äº›æ•°æ®
+ * @note   è‹¥ä½¿ç”¨ RTOS ï¼Œåˆ™ BSP_UART_Sendã€ BSP_UART_SendBlocking å‡ä¸èƒ½åœ¨ä¸­æ–­ä¸­ä½¿ç”¨
+ * @param[in]  id: ä¸²å£ID
+ * @param[in]  data: è¦å‘é€çš„æ•°æ®æ± 
+ * @param[in]  len: è¦å‘é€çš„æ•°æ®é•¿åº¦ï¼Œå•ä½ byte
+ * @param[in]  timeout: å‘é€æœ€å¤§è¶…æ—¶ç­‰å¾…æ—¶é—´ï¼Œå•ä½ ms
  * @retval BSP_UART_ERR 
  */
 #if (USING_RTOS_TYPE)
@@ -244,11 +265,13 @@ BSP_UART_ERR  BSP_UART_Send(BSP_UART_ID  id, const uint8_t *data, uint16_t len, 
     
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL)
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
 
-    if (uart->init == 0)
+    if (uart->is_init == false) {
         return BSP_UART_ERR_NO_INIT;
+    }
     
 #if (USING_RTOS_TYPE)
     BSP_UART_Port_TxLock(uart);
@@ -262,12 +285,12 @@ BSP_UART_ERR  BSP_UART_Send(BSP_UART_ID  id, const uint8_t *data, uint16_t len, 
 
 #if (USING_RTOS_TYPE)
 /**
- * @brief  ´Ó UART ·¢³öÒ»Ð©Êý¾Ý£¨×èÈûÊ½£¬Ö±µ½Êý¾Ý·¢ËÍÍê±Ï»ò³¬Ê±£©
- * @note   ÈôÊ¹ÓÃ RTOS £¬Ôò BSP_UART_Send¡¢ BSP_UART_SendBlocking ¾ù²»ÄÜÔÚÖÐ¶ÏÖÐÊ¹ÓÃ
- * @param[in]  id: ´®¿Ú ID
- * @param[in]  data: Òª·¢ËÍµÄÊý¾Ý³Ø
- * @param[in]  len: Òª·¢ËÍµÄÊý¾Ý³¤¶È£¬µ¥Î» byte
- * @param[in]  timeout: ·¢ËÍ×î´ó³¬Ê±µÈ´ýÊ±¼ä£¬µ¥Î» ms
+ * @brief  ä»Ž UART å‘å‡ºä¸€äº›æ•°æ®ï¼ˆé˜»å¡žå¼ï¼Œç›´åˆ°æ•°æ®å‘é€å®Œæ¯•æˆ–è¶…æ—¶ï¼‰
+ * @note   è‹¥ä½¿ç”¨ RTOS ï¼Œåˆ™ BSP_UART_Sendã€ BSP_UART_SendBlocking å‡ä¸èƒ½åœ¨ä¸­æ–­ä¸­ä½¿ç”¨
+ * @param[in]  id: ä¸²å£ ID
+ * @param[in]  data: è¦å‘é€çš„æ•°æ®æ± 
+ * @param[in]  len: è¦å‘é€çš„æ•°æ®é•¿åº¦ï¼Œå•ä½ byte
+ * @param[in]  timeout: å‘é€æœ€å¤§è¶…æ—¶ç­‰å¾…æ—¶é—´ï¼Œå•ä½ ms
  * @retval BSP_UART_ERR 
  */
 BSP_UART_ERR  BSP_UART_SendBlocking(BSP_UART_ID  id, const uint8_t *data, uint16_t len, uint16_t timeout)
@@ -276,37 +299,39 @@ BSP_UART_ERR  BSP_UART_SendBlocking(BSP_UART_ID  id, const uint8_t *data, uint16
     
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL)
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
 
-    if (uart->init == 0)
+    if (uart->init == 0) {
         return BSP_UART_ERR_NO_INIT;
+    }
 
     return BSP_UART_Port_Send(uart, data, len, timeout);
 }
 #endif
 
 
-
 /**
- * @brief  Çå³ýÓÃ»§´«ÈëµÄ UART Êý¾Ý»º´æ³Ø
+ * @brief  æ¸…é™¤ç”¨æˆ·ä¼ å…¥çš„ UART æ•°æ®ç¼“å­˜æ± 
  * @note   
- * @param[in]  id: ´®¿Ú ID
+ * @param[in]  id: ä¸²å£ ID
  * @retval BSP_UART_ERR 
  */
 BSP_UART_ERR  BSP_UART_ClearUserBuff(BSP_UART_ID  id)
 {
     struct UART_STRUCT *uart = BSP_UART_Port_GetHandle(id);
     
-    if (uart == NULL) 
+    if (uart == NULL) {
         return BSP_UART_ERR_NOT_FOUND;
+    }
     
-    BSP_INT_DIS();
-    
-    if (uart->rx_data_len)
-        *(uart->rx_data_len) = 0;
-    
-    BSP_INT_EN();
+    __IRQ_SAFE
+    {
+        if (uart->rx_data_len) {
+            *(uart->rx_data_len) = 0;
+        }
+    }
     
     return BSP_UART_ERR_OK;
 }
@@ -314,134 +339,142 @@ BSP_UART_ERR  BSP_UART_ClearUserBuff(BSP_UART_ID  id)
 
 /* Private functions ---------------------------------------------------------*/
 /**
- * @brief  ½« DMA »º´æ³ØµÄ UART Êý¾Ý°áÔËµ½ÓÃ»§Êý¾Ý³ØÖÐ
+ * @brief  å°† DMA ç¼“å­˜æ± çš„ UART æ•°æ®æ¬è¿åˆ°ç”¨æˆ·æ•°æ®æ± ä¸­
  * @note   
- * @param[in]  uart: UART ¶ÔÏó
+ * @param[in]  uart: UART å¯¹è±¡
  * @retval None
  */
 static void UART_CopyDataToUserBuff(struct UART_STRUCT *uart)
 {
-    if (*(uart->rx_data_len) >= uart->rx_data_max_len)
+    if (*(uart->rx_data_len) >= uart->rx_data_max_len) {
         return;
-
-//    BSP_INT_DIS();
+    }
     
     uint8_t  *user_buff     = &uart->rx_data[0];
     uint16_t *user_buff_len = (uint16_t *)(uart->rx_data_len);
-    uint16_t new_pos        = uart->rx_buff_max_len - BSP_UART_Port_GetDmaCounter(uart);   /* ¼ÆËã»º³åÇøµÄ½ÓÊÕ×Ö½ÚÊý */
+    uint16_t new_pos        = uart->rx_buff_max_len - BSP_UART_Port_GetDmaCounter(uart);   /* è®¡ç®—ç¼“å†²åŒºçš„æŽ¥æ”¶å­—èŠ‚æ•° */
     uint16_t recv_len       = 0;
 
-    if (new_pos != uart->old_pos)                   /* ÊÕµ½ÐÂµÄÊý¾Ý */
+    if (new_pos != uart->old_pos)                   /* æ”¶åˆ°æ–°çš„æ•°æ® */
     {
-        if (new_pos > uart->old_pos)                /* ÏßÐÔÄ£Ê½ */
+        if (new_pos > uart->old_pos)                /* çº¿æ€§æ¨¡å¼ */
         {
-            recv_len = new_pos - uart->old_pos;     /* ¼ÆËã±¾´Î½ÓÊÕµ½µÄ×Ö½ÚÊý */
+            recv_len = new_pos - uart->old_pos;     /* è®¡ç®—æœ¬æ¬¡æŽ¥æ”¶åˆ°çš„å­—èŠ‚æ•° */
             
-            /* Êý¾Ý³¬³öÓÃ»§ buff £¬Ö»ÄÜ½ÓÊÕÓÃ»§ buff Ê£Óà¿Õ¼äµÄ³¤¶ÈÊý¾Ý */
+            /* æ•°æ®è¶…å‡ºç”¨æˆ· buff ï¼Œåªèƒ½æŽ¥æ”¶ç”¨æˆ· buff å‰©ä½™ç©ºé—´çš„é•¿åº¦æ•°æ® */
             if ((*user_buff_len) + recv_len > uart->rx_data_max_len)
             {
                 recv_len = uart->rx_data_max_len - *user_buff_len;
             }
             
-            memcpy(&user_buff[*user_buff_len], &uart->rx_buff[ uart->old_pos ], recv_len);
-            (*user_buff_len) += recv_len;    /* ÉèÖÃÆ«ÒÆÁ¿ */
+            __IRQ_SAFE
+            {
+                memcpy(&user_buff[*user_buff_len], &uart->rx_buff[ uart->old_pos ], recv_len);
+                (*user_buff_len) += recv_len;    /* è®¾ç½®åç§»é‡ */
+            }
         }
-        else    /* Òç³öÄ£Ê½ */
+        else    /* æº¢å‡ºæ¨¡å¼ */
         {
-            /* ÏÈ´¦ÀíÎ´Òç³öµÄ²¿·Ö */
+            /* å…ˆå¤„ç†æœªæº¢å‡ºçš„éƒ¨åˆ† */
             recv_len = uart->rx_buff_max_len - uart->old_pos;
             
-            /* Êý¾Ý³¬³öÓÃ»§ buff £¬Ö»ÄÜ½ÓÊÕÓÃ»§ buff Ê£Óà¿Õ¼äµÄ³¤¶ÈÊý¾Ý */
+            /* æ•°æ®è¶…å‡ºç”¨æˆ· buff ï¼Œåªèƒ½æŽ¥æ”¶ç”¨æˆ· buff å‰©ä½™ç©ºé—´çš„é•¿åº¦æ•°æ® */
             if (*user_buff_len + recv_len > uart->rx_data_max_len)
             {
                 recv_len = uart->rx_data_max_len - *user_buff_len;
             }
             
-            memcpy(&user_buff[*user_buff_len], &uart->rx_buff[ uart->old_pos ], recv_len);
-            *user_buff_len += recv_len;    /* ÉèÖÃÆ«ÒÆÁ¿ */
+            __IRQ_SAFE
+            {
+                memcpy(&user_buff[*user_buff_len], &uart->rx_buff[ uart->old_pos ], recv_len);
+                *user_buff_len += recv_len;    /* è®¾ç½®åç§»é‡ */
+            }
             
-            /* ÔÙ´¦ÀíÒç³öµÄ²¿·Ö */
+            /* å†å¤„ç†æº¢å‡ºçš„éƒ¨åˆ† */
             recv_len = new_pos;
             
             if (recv_len != 0)
             {
-                /* Êý¾Ý³¬³öÓÃ»§ buff £¬Ö»ÄÜ½ÓÊÕÓÃ»§ buff Ê£Óà¿Õ¼äµÄ³¤¶ÈÊý¾Ý */
+                /* æ•°æ®è¶…å‡ºç”¨æˆ· buff ï¼Œåªèƒ½æŽ¥æ”¶ç”¨æˆ· buff å‰©ä½™ç©ºé—´çš„é•¿åº¦æ•°æ® */
                 if (*user_buff_len + recv_len > uart->rx_data_max_len)
                 {
                     recv_len = uart->rx_data_max_len - *user_buff_len;
                 }
                 
-                memcpy(&user_buff[*user_buff_len], &uart->rx_buff[0], recv_len);
-                (*user_buff_len) += recv_len;    /* ÉèÖÃÆ«ÒÆÁ¿ */
+                __IRQ_SAFE
+                {
+                    memcpy(&user_buff[*user_buff_len], &uart->rx_buff[0], recv_len);
+                    (*user_buff_len) += recv_len;    /* è®¾ç½®åç§»é‡ */
+                }
             }
         }
     }
     uart->old_pos = new_pos;
 
-    if (uart->old_pos >= uart->rx_buff_max_len) 
-    {
+    if (uart->old_pos >= uart->rx_buff_max_len) {
         uart->old_pos = 0;
     }
-    
-//    BSP_INT_EN();
 }
 
 
 /**
- * @brief  ´®¿Ú½ÓÊÕµ½µ¥×Ö½ÚÊý¾ÝµÄÖÐ¶Ï´¦Àíº¯Êý
+ * @brief  ä¸²å£æŽ¥æ”¶åˆ°å•å­—èŠ‚æ•°æ®çš„ä¸­æ–­å¤„ç†å‡½æ•°
  * @note   
- * @param[in]  uart: UART ¶ÔÏó
+ * @param[in]  uart: UART å¯¹è±¡
  * @retval None
  */
 static void UART_RxIntHandler(struct UART_STRUCT *uart)
 {
-    if (uart->rx_init == 0)
+    if (uart->is_rx_init == false) {
         return;
+    }
     
     uart->rx_data[ *(uart->rx_data_len) ] = (uint8_t)BSP_UART_Port_GetOneByte(uart);
     *(uart->rx_data_len) += 1;
     
-    if (*(uart->rx_data_len) == uart->rx_data_max_len)
-    {
+    if (*(uart->rx_data_len) == uart->rx_data_max_len) {
         *(uart->rx_data_len) = 0;
     }
 }
 
 
 /**
- * @brief  ´®¿Ú·¢Éú¿ÕÏÐÖÐ¶ÏµÄ´¦Àíº¯Êý
+ * @brief  ä¸²å£å‘ç”Ÿç©ºé—²ä¸­æ–­çš„å¤„ç†å‡½æ•°
  * @note   
- * @param[in]  uart: UART ¶ÔÏó
+ * @param[in]  uart: UART å¯¹è±¡
  * @retval None
  */
 static void UART_RxIdleHandler(struct UART_STRUCT *uart)
 {
-    if (uart->rx_init == 0)
+    if (uart->is_rx_init == false) {
         return;
+    }
     
-//    BSP_INT_DIS();
-    uart->idle_flag = 1;
-//    BSP_INT_EN();
+    __IRQ_SAFE {
+        uart->is_idle_int = true;
+    }
 
-    if (uart->handle.hdmarx)
+    if (uart->handle.hdmarx) {
         UART_CopyDataToUserBuff(uart);
+    }
     
     BSP_UART_Port_RxUnlock(uart);
 }
 
 
 /**
- * @brief  ´®¿Ú·¢ËÍÍê³ÉµÄÖÐ¶Ï´¦Àíº¯Êý
+ * @brief  ä¸²å£å‘é€å®Œæˆçš„ä¸­æ–­å¤„ç†å‡½æ•°
  * @note   
- * @param[in]  uart: UART ¶ÔÏó
+ * @param[in]  uart: UART å¯¹è±¡
  * @retval None
  */
 static void UART_TxHandler(struct UART_STRUCT *uart)
 {
     BSP_UART_Port_TxUnlock(uart);
         
-    if (uart->TX_Complete)
+    if (uart->TX_Complete) {
         uart->TX_Complete(uart);
+    }
 }
 
 

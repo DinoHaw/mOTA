@@ -35,8 +35,7 @@
 #ifndef __BSP_UART_H__
 #define __BSP_UART_H__
 
-#include "bsp_common.h"
-#include "bsp_uart_config.h"
+#include "bsp_uart_stm32.h"
 
 #if (USING_RTOS_TYPE)
 #define UART_INIT_PARA(x)                       \
@@ -50,7 +49,7 @@
 #define UART_INIT_PARA(x)                       \
 {                                               \
     .id              = BSP_UART##x,             \
-    .rx_buff         = _uart##x##_buff,          \
+    .rx_buff         = _uart##x##_buff,         \
     .rx_buff_max_len = BSP_UART_BUFF_SIZE,      \
 }
 #endif
@@ -60,48 +59,48 @@
 #define UART_CREATE(x)      static uint8_t _uart##x##_buff[BSP_UART_BUFF_SIZE];     \
                             static struct UART_STRUCT _uart##x = UART_INIT_PARA(x);
 
-/* ¶¨ÒåÏî */
+/* å®šä¹‰é¡¹ */
 typedef enum 
 {
 #if (BSP_USING_UART1)
-    BSP_UART1    = 0x01,
+    BSP_UART1    = (1 << 1),
 #endif
 #if (BSP_USING_UART2)
-    BSP_UART2    = 0x02,
+    BSP_UART2    = (1 << 2),
 #endif
 #if (BSP_USING_UART2_RE)
-    BSP_UART2_RE = 0x82,
+    BSP_UART2_RE = (1 << 3),
 #endif
 #if (BSP_USING_UART3)
-    BSP_UART3    = 0x03,
+    BSP_UART3    = (1 << 4),
 #endif
 #if (BSP_USING_UART3_RE)
-    BSP_UART3_RE = 0x83,
+    BSP_UART3_RE = (1 << 5),
 #endif
 #if (BSP_USING_UART4)
-    BSP_UART4    = 0x04,
+    BSP_UART4    = (1 << 6),
 #endif
 #if (BSP_USING_UART5)
-    BSP_UART5    = 0x05,
+    BSP_UART5    = (1 << 7),
 #endif
 #if (BSP_USING_UART6)
-    BSP_UART6    = 0x06,
+    BSP_UART6    = (1 << 8),
 #endif
 } BSP_UART_ID;
 
 typedef enum 
 {
     BSP_UART_ERR_OK                 = 0x00U,
-    BSP_UART_ERR_COMM_ERR           = 0x01U,        /* Í¨Ñ¶´íÎó£¨Ô´×Ô HAL ¿â£© */
-    BSP_UART_ERR_BUSY               = 0x02U,        /* UART ÍâÉèÃ¦Âµ£¨Ô´×Ô HAL ¿â£© */
-    BSP_UART_ERR_TIMEOUT            = 0x03U,        /* ´¦ÀíÊ±¼ä³¬Ê±£¨Ô´×Ô HAL ¿â£© */
-    BSP_UART_ERR_NOT_FOUND          = 0x04U,        /* Î´ÕÒµ½¶ÔÓ¦µÄ UART ¶ÔÏó */
-    BSP_UART_ERR_LOCK_INIT_ERR      = 0x05U,        /* Í¨Ñ¶ÐÅºÅËø³õÊ¼»¯Ê§°Ü */
-    BSP_UART_ERR_LOCK_ERR           = 0x06U,        /* Í¨Ñ¶ÐÅºÅÉÏËøÊ§°Ü */
-    BSP_UART_ERR_UNLOCK_ERR         = 0x07U,        /* Í¨Ñ¶ÐÅºÅ½âËøÊ§°Ü */
-    BSP_UART_ERR_NO_RECV_FRAME      = 0x08U,        /* »¹Î´ÊÕµ½Ò»Ö¡ÍêÕûµÄÊý¾Ý */
-    BSP_UART_ERR_NO_INIT            = 0x09U,        /* Ê¹ÓÃµÄ UART ¶ÔÏó»¹Î´³õÊ¼»¯ */
-    BSP_UART_ERR_NAME_DUPLICATE     = 0x0AU,        /* UART ¶ÔÏóÃüÃûÖØ¸´ */
+    BSP_UART_ERR_COMM_ERR           = 0x01U,        /* é€šè®¯é”™è¯¯ï¼ˆæºè‡ª HAL åº“ï¼‰ */
+    BSP_UART_ERR_BUSY               = 0x02U,        /* UART å¤–è®¾å¿™ç¢Œï¼ˆæºè‡ª HAL åº“ï¼‰ */
+    BSP_UART_ERR_TIMEOUT            = 0x03U,        /* å¤„ç†æ—¶é—´è¶…æ—¶ï¼ˆæºè‡ª HAL åº“ï¼‰ */
+    BSP_UART_ERR_NOT_FOUND          = 0x04U,        /* æœªæ‰¾åˆ°å¯¹åº”çš„ UART å¯¹è±¡ */
+    BSP_UART_ERR_LOCK_INIT_ERR      = 0x05U,        /* é€šè®¯ä¿¡å·é”åˆå§‹åŒ–å¤±è´¥ */
+    BSP_UART_ERR_LOCK_ERR           = 0x06U,        /* é€šè®¯ä¿¡å·ä¸Šé”å¤±è´¥ */
+    BSP_UART_ERR_UNLOCK_ERR         = 0x07U,        /* é€šè®¯ä¿¡å·è§£é”å¤±è´¥ */
+    BSP_UART_ERR_NO_RECV_FRAME      = 0x08U,        /* è¿˜æœªæ”¶åˆ°ä¸€å¸§å®Œæ•´çš„æ•°æ® */
+    BSP_UART_ERR_NO_INIT            = 0x09U,        /* ä½¿ç”¨çš„ UART å¯¹è±¡è¿˜æœªåˆå§‹åŒ– */
+    BSP_UART_ERR_NAME_DUPLICATE     = 0x0AU,        /* UART å¯¹è±¡å‘½åé‡å¤ */
 
 } BSP_UART_ERR;
 
@@ -119,32 +118,30 @@ struct UART_STRUCT
     OS_SEM     tx_lock;
 #endif
     
-    /* ´®¿ÚÎ¨Ò»±êÊ¶ÐÅÏ¢ */
-    const uint8_t id;
+    /* ä¸²å£å”¯ä¸€æ ‡è¯†ä¿¡æ¯ */
+    const BSP_UART_ID id;
 #if (USING_RTOS_TYPE)
     const char name[ MAX_NAME_LEN ];
 #endif
 
-    /* ÓÃ»§´®¿ÚÊý¾Ý£¬ÐèÒªÓÃ»§´«Èë£¨¶þ¼¶»º´æ£©£¬µ±Ò»¼¶»º´æ°ëÂúºÍÈ«ÂúÊ±£¬½«»áÐ´Èë¶þ¼¶»º´æ */
+    /* ç”¨æˆ·ä¸²å£æ•°æ®ï¼Œéœ€è¦ç”¨æˆ·ä¼ å…¥ï¼ˆäºŒçº§ç¼“å­˜ï¼‰ï¼Œå½“ä¸€çº§ç¼“å­˜åŠæ»¡å’Œå…¨æ»¡æ—¶ï¼Œå°†ä¼šå†™å…¥äºŒçº§ç¼“å­˜ */
     uint8_t  *rx_data;
     uint16_t * volatile rx_data_len;
     uint16_t rx_data_max_len;
     
-    /* Ò»Ð©±êÖ¾Î» */
-    volatile uint8_t init            :1;        /* ´®¿Ú×é¼þ³õÊ¼»¯±êÖ¾Î» */
-    volatile uint8_t rx_init         :1;        /* ´®¿Ú×é¼þµÄ½ÓÊÕ¹¦ÄÜ³õÊ¼»¯±êÖ¾Î» */
-//    volatile uint8_t user_buff_full  :1;        /* ÔÝÎÞÊ¹ÓÃ */
-    volatile uint8_t idle_flag       :1;        /* ÊÇ·ñ·¢Éú¿ÕÏÐÖÐ¶ÏµÄ±êÖ¾Î» */
-    volatile uint8_t                 :0;
+    /* ä¸€äº›æ ‡å¿—ä½ */
+    volatile bool is_init;         /* ä¸²å£ç»„ä»¶åˆå§‹åŒ–æ ‡å¿—ä½ */
+    volatile bool is_rx_init;      /* ä¸²å£ç»„ä»¶çš„æŽ¥æ”¶åŠŸèƒ½åˆå§‹åŒ–æ ‡å¿—ä½ */
+    volatile bool is_idle_int;     /* æ˜¯å¦å‘ç”Ÿç©ºé—²ä¸­æ–­çš„æ ‡å¿—ä½ */
     
-    /* ´®¿ÚÊý¾ÝÒ»¼¶»º´æ£¨ÓÉ DMA ÎÞÌõ¼þÐ´Èë£© */
+    /* ä¸²å£æ•°æ®ä¸€çº§ç¼“å­˜ï¼ˆç”± DMA æ— æ¡ä»¶å†™å…¥ï¼‰ */
     const uint8_t  *rx_buff;
     const uint16_t rx_buff_max_len;
 
-    /* »·ÐÎ»º´æµÄ¡°Ð´¡±Î»ÖÃ */
+    /* çŽ¯å½¢ç¼“å­˜çš„â€œå†™â€ä½ç½® */
     uint16_t old_pos;
     
-    /* »Øµ÷º¯Êý */
+    /* å›žè°ƒå‡½æ•° */
     uint8_t (*RX_Indicate)(struct UART_STRUCT *uart);
     uint8_t (*TX_Complete)(struct UART_STRUCT *uart);
 
@@ -155,7 +152,7 @@ typedef void (*UART_Callback_t)(struct UART_STRUCT *uart);
 
 
 /**
- * BSP UART ÓÃ»§½Ó¿Ú 
+ * BSP UART ç”¨æˆ·æŽ¥å£ 
  */
 #if (USING_RTOS_TYPE)
 BSP_UART_ERR    BSP_UART_WaitForData        (BSP_UART_ID  id);
@@ -164,44 +161,20 @@ BSP_UART_ERR    BSP_UART_Init               (BSP_UART_ID  id);
 BSP_UART_ERR    BSP_UART_EnableReceive      (BSP_UART_ID  id, uint8_t *data, uint16_t *len, uint16_t max_len);
 BSP_UART_ERR    BSP_UART_DisableReceive     (BSP_UART_ID  id);
 BSP_UART_ERR    BSP_UART_LinkUserData       (BSP_UART_ID  id, void *user_data);
-/* ×¢Òâ£¡£¡£¡ÈôÊ¹ÓÃ RTOS £¬Ôò BSP_UART_Send ¡¢ BSP_UART_SendBlocking ¾ù²»ÄÜÔÚÖÐ¶ÏÖÐÊ¹ÓÃ */
+/* æ³¨æ„ï¼ï¼ï¼è‹¥ä½¿ç”¨ RTOS ï¼Œåˆ™ BSP_UART_Send ã€ BSP_UART_SendBlocking å‡ä¸èƒ½åœ¨ä¸­æ–­ä¸­ä½¿ç”¨ */
 #if (USING_RTOS_TYPE)
 BSP_UART_ERR    BSP_UART_Send               (BSP_UART_ID  id, const uint8_t *data, uint16_t len);
 BSP_UART_ERR    BSP_UART_SendBlocking       (BSP_UART_ID  id, const uint8_t *data, uint16_t len, uint16_t timeout);
 #else
 BSP_UART_ERR    BSP_UART_Send               (BSP_UART_ID  id, const uint8_t *data, uint16_t len, uint16_t timeout);
 #endif
-/* ×¢Òâ£¡£¡£¡ÈôÊ¹ÓÃ RTOS £¬Ôò BSP_Printf ²»ÄÜÔÚÖÐ¶ÏÖÐÊ¹ÓÃ */
+/* æ³¨æ„ï¼ï¼ï¼è‹¥ä½¿ç”¨ RTOS ï¼Œåˆ™ BSP_Printf ä¸èƒ½åœ¨ä¸­æ–­ä¸­ä½¿ç”¨ */
 #if (ENABLE_DEBUG_PRINT && EANBLE_PRINTF_USING_RTT == 0)
 void            BSP_Printf                  (const char *fmt, ...);
 #endif
 BSP_UART_ERR    BSP_UART_SetTxIndicate      (BSP_UART_ID  id, uint8_t (*TX_Complete)(struct UART_STRUCT *uart));
 BSP_UART_ERR    BSP_UART_ClearUserBuff      (BSP_UART_ID  id);
 BSP_UART_ERR    BSP_UART_IsFrameEnd         (BSP_UART_ID  id);
-
-
-/**
- * BSP UART ÒÆÖ²½Ó¿Ú£¬²»¶ÔÍâÊ¹ÓÃ
- */
-void            BSP_UART_Port_Init              ( struct UART_STRUCT *uart, 
-                                                  UART_Callback_t rx_callback, 
-                                                  UART_Callback_t rx_idle_callback, 
-                                                  UART_Callback_t dma_rx_callback, 
-                                                  UART_Callback_t dma_tx_callback);
-BSP_UART_ERR    BSP_UART_Port_EnableReceive     (struct UART_STRUCT *uart);
-BSP_UART_ERR    BSP_UART_Port_DisableReceive    (struct UART_STRUCT *uart);
-BSP_UART_ERR    BSP_UART_Port_Send              (struct UART_STRUCT *uart, const uint8_t *data, uint16_t len, uint16_t timeout);
-uint32_t        BSP_UART_Port_GetDmaCounter     (struct UART_STRUCT *uart);
-uint32_t        BSP_UART_Port_GetOneByte        (struct UART_STRUCT *uart);
-struct UART_STRUCT *BSP_UART_Port_GetHandle     (BSP_UART_ID  id);
-
-
-/* Í¨Ñ¶Ëø */
-BSP_UART_ERR    BSP_UART_Port_LockInit          (struct UART_STRUCT *uart);
-BSP_UART_ERR    BSP_UART_Port_RxLock            (struct UART_STRUCT *uart);
-BSP_UART_ERR    BSP_UART_Port_RxUnlock          (struct UART_STRUCT *uart);
-BSP_UART_ERR    BSP_UART_Port_TxLock            (struct UART_STRUCT *uart);
-BSP_UART_ERR    BSP_UART_Port_TxUnlock          (struct UART_STRUCT *uart);
 
 
 #endif

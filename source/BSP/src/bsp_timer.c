@@ -49,13 +49,13 @@ static void _Timer_Add(struct BSP_TIMER *timer);
 
 /* Exported functions ---------------------------------------------------------*/
 /**
- * @brief  timer ³õÊ¼»¯
- * @note   ÖØĞÂÅäÖÃ timer ²ÎÊıÊ±Ò²¿Éµ÷ÓÃ±¾º¯Êı£¬ÎŞ³åÍ»
- * @param[in]  timer: timer ¶ÔÏó
- * @param[in]  Timeout_Callback: timer ³¬Ê±»Øµ÷º¯Êı
- * @param[in]  timeout: ³¬Ê±Ê±¼ä£¬µ¥Î» ms
- * @param[in]  period: Ö´ĞĞ´ÎÊı¡£0: ÎŞÏŞÖ´ĞĞ
- * @param[in]  timer_type: timer ÀàĞÍ£¬¿ÉÑ¡ÔñÓ²¼şºÍÈí¼ş
+ * @brief  timer åˆå§‹åŒ–
+ * @note   é‡æ–°é…ç½® timer å‚æ•°æ—¶ä¹Ÿå¯è°ƒç”¨æœ¬å‡½æ•°ï¼Œæ— å†²çª
+ * @param[in]  timer: timer å¯¹è±¡
+ * @param[in]  Timeout_Callback: timer è¶…æ—¶å›è°ƒå‡½æ•°
+ * @param[in]  timeout: è¶…æ—¶æ—¶é—´ï¼Œå•ä½ ms
+ * @param[in]  period: æ‰§è¡Œæ¬¡æ•°ã€‚0: æ— é™æ‰§è¡Œ
+ * @param[in]  timer_type: timer ç±»å‹ï¼Œå¯é€‰æ‹©ç¡¬ä»¶å’Œè½¯ä»¶
  * @retval None
  */
 void BSP_Timer_Init(struct BSP_TIMER *timer,
@@ -84,10 +84,10 @@ void BSP_Timer_Init(struct BSP_TIMER *timer,
 
 
 /**
- * @brief  Á´½ÓÓÃ»§Êı¾İ
- * @note   ¿ÉÑ¡Ïî£¬Ö÷ÒªÓÃÓÚ»Øµ÷º¯Êı´«µİÓÃ»§µÄÊı¾İ
- * @param[in]  timer: timer ¶ÔÏó
- * @param[in]  user_data: ÓÃ»§Êı¾İ
+ * @brief  é“¾æ¥ç”¨æˆ·æ•°æ®
+ * @note   å¯é€‰é¡¹ï¼Œä¸»è¦ç”¨äºå›è°ƒå‡½æ•°ä¼ é€’ç”¨æˆ·çš„æ•°æ®
+ * @param[in]  timer: timer å¯¹è±¡
+ * @param[in]  user_data: ç”¨æˆ·æ•°æ®
  * @retval None
  */
 void BSP_Timer_LinkUserData(struct BSP_TIMER *timer, void *user_data)
@@ -99,9 +99,9 @@ void BSP_Timer_LinkUserData(struct BSP_TIMER *timer, void *user_data)
 
 
 /**
- * @brief  ¿ªÆô timer
- * @note   ¿ªÆôºó timer »á¼Ì³ĞÉÏÒ»¸ö×´Ì¬¼ÌĞøÔË×ª
- * @param[in]  timer: timer ¶ÔÏó
+ * @brief  å¼€å¯ timer
+ * @note   å¼€å¯å timer ä¼šç»§æ‰¿ä¸Šä¸€ä¸ªçŠ¶æ€ç»§ç»­è¿è½¬
+ * @param[in]  timer: timer å¯¹è±¡
  * @retval None
  */
 void BSP_Timer_Start(struct BSP_TIMER *timer)
@@ -113,9 +113,9 @@ void BSP_Timer_Start(struct BSP_TIMER *timer)
 
 
 /**
- * @brief  ÖØĞÂ¿ªÆô timer
- * @note   ÖØĞÂ¿ªÆô»á½« timer µÄ²ÎÊı¸´Î»µ½³õÊ¼×´Ì¬ºóÔË×ª£¬¶ø²»±ØÔÙ´Îµ÷ÓÃ BSP_Timer_Init
- * @param[in]  timer: timer ¶ÔÏó
+ * @brief  é‡æ–°å¼€å¯ timer
+ * @note   é‡æ–°å¼€å¯ä¼šå°† timer çš„å‚æ•°å¤ä½åˆ°åˆå§‹çŠ¶æ€åè¿è½¬ï¼Œè€Œä¸å¿…å†æ¬¡è°ƒç”¨ BSP_Timer_Init
+ * @param[in]  timer: timer å¯¹è±¡
  * @retval None
  */
 void BSP_Timer_Restart(struct BSP_TIMER *timer)
@@ -130,9 +130,9 @@ void BSP_Timer_Restart(struct BSP_TIMER *timer)
 
 
 /**
- * @brief  ÔİÍ£ timer ÔËĞĞ
- * @note   Ö»ÊÇÔİÍ££¬ timer »¹ÔÚÁ´±íÉÏ£¬»Ø¸´Ö»Ğèµ÷ÓÃ BSP_Timer_Start »ò BSP_Timer_Restart
- * @param[in]  timer: timer ¶ÔÏó
+ * @brief  æš‚åœ timer è¿è¡Œ
+ * @note   åªæ˜¯æš‚åœï¼Œ timer è¿˜åœ¨é“¾è¡¨ä¸Šï¼Œå›å¤åªéœ€è°ƒç”¨ BSP_Timer_Start æˆ– BSP_Timer_Restart
+ * @param[in]  timer: timer å¯¹è±¡
  * @retval None
  */
 void BSP_Timer_Pause(struct BSP_TIMER *timer)
@@ -147,9 +147,9 @@ void BSP_Timer_Pause(struct BSP_TIMER *timer)
 
 
 /**
- * @brief  ·ÖÀë timer
- * @note   ·ÖÀëºó£¬Á´±í²»ÔÙÓĞ¸Ã timer £¬»Ö¸´ĞèÒªÖØĞÂµ÷ÓÃ BSP_Timer_Init
- * @param[in]  timer: timer ¶ÔÏó
+ * @brief  åˆ†ç¦» timer
+ * @note   åˆ†ç¦»åï¼Œé“¾è¡¨ä¸å†æœ‰è¯¥ timer ï¼Œæ¢å¤éœ€è¦é‡æ–°è°ƒç”¨ BSP_Timer_Init
+ * @param[in]  timer: timer å¯¹è±¡
  * @retval None
  */
 void BSP_Timer_Detach(struct BSP_TIMER *timer)
@@ -177,9 +177,9 @@ void BSP_Timer_Detach(struct BSP_TIMER *timer)
 
 
 /**
- * @brief  timer ´¦Àíº¯Êı
- * @note   ±ØĞë±»Ñ­»·µ÷ÓÃ£¬½¨Òé·ÅÔÚÖĞ¶Ïº¯ÊıÄÚ
- * @param[in]  ms: ±»µ÷ÓÃµÄ¼ä¸ôÊ±¼ä£¬µ¥Î» ms£¨ÍÆ¼ö 1ms £©
+ * @brief  timer å¤„ç†å‡½æ•°
+ * @note   å¿…é¡»è¢«å¾ªç¯è°ƒç”¨ï¼Œå»ºè®®æ”¾åœ¨ä¸­æ–­å‡½æ•°å†…
+ * @param[in]  ms: è¢«è°ƒç”¨çš„é—´éš”æ—¶é—´ï¼Œå•ä½ msï¼ˆæ¨è 1ms ï¼‰
  * @retval None
  */
 void BSP_Timer_Handler(uint8_t ms)
@@ -216,8 +216,8 @@ void BSP_Timer_Handler(uint8_t ms)
 
 
 /**
- * @brief  Èí¼ş¶¨Ê±Æ÷´¦Àíº¯Êı
- * @note   Ê¹ÓÃ²éÑ¯µÄ±êÖ¾Î»·½Ê½£¬ÈôÓÃ»§¶Ô timer ³õÊ¼»¯Ê±Ñ¡ÔñÁË TIMER_TYPE_SOFTWARE £¬Ôò±ØĞë±»²»¶Ïµ÷ÓÃ
+ * @brief  è½¯ä»¶å®šæ—¶å™¨å¤„ç†å‡½æ•°
+ * @note   ä½¿ç”¨æŸ¥è¯¢çš„æ ‡å¿—ä½æ–¹å¼ï¼Œè‹¥ç”¨æˆ·å¯¹ timer åˆå§‹åŒ–æ—¶é€‰æ‹©äº† TIMER_TYPE_SOFTWARE ï¼Œåˆ™å¿…é¡»è¢«ä¸æ–­è°ƒç”¨
  * @retval None
  */
 void BSP_Timer_SoftTimerTask(void)
@@ -246,9 +246,9 @@ void BSP_Timer_SoftTimerTask(void)
 
 /* Private functions ---------------------------------------------------------*/
 /**
- * @brief  ½«¶¨Ê±Æ÷¶ÔÏóÌí¼Ó½ø¹ÜÀíÁ´±í
+ * @brief  å°†å®šæ—¶å™¨å¯¹è±¡æ·»åŠ è¿›ç®¡ç†é“¾è¡¨
  * @note   
- * @param[in]  timer: timer ¶ÔÏó
+ * @param[in]  timer: timer å¯¹è±¡
  * @retval None
  */
 static void _Timer_Add(struct BSP_TIMER *timer)

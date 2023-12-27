@@ -51,14 +51,14 @@ static struct BSP_KEY *_key_head;
 
 /* Exported functions ---------------------------------------------------------*/                                        
 /**
- * @brief  °´¼ü¶ÔÏó³õÊ¼»¯
+ * @brief  æŒ‰é”®å¯¹è±¡åˆå§‹åŒ–
  * @note   
- * @param[in]  key: °´¼ü¾ä±ú
- * @param[in]  id: °´¼ü ID£¬ÓÃÓÚÊ¶±ğ²»Í¬µÄ°´¼ü
- * @param[in]  KEY_GetState: °´¼ü×´Ì¬»ñÈ¡»Øµ÷º¯Êı
- * @param[in]  press_level: °´¼ü°´ÏÂÊ±µÄµçÆ½×´Ì¬
- * @param[in]  press_time: ÉèÖÃ°´¼ü³¤°´µÄ¼ä¸ôÊ±¼ä
- * @retval Ö´ĞĞ½á¹û
+ * @param[in]  key: æŒ‰é”®å¥æŸ„
+ * @param[in]  id: æŒ‰é”® IDï¼Œç”¨äºè¯†åˆ«ä¸åŒçš„æŒ‰é”®
+ * @param[in]  KEY_GetState: æŒ‰é”®çŠ¶æ€è·å–å›è°ƒå‡½æ•°
+ * @param[in]  press_level: æŒ‰é”®æŒ‰ä¸‹æ—¶çš„ç”µå¹³çŠ¶æ€
+ * @param[in]  press_time: è®¾ç½®æŒ‰é”®é•¿æŒ‰çš„é—´éš”æ—¶é—´
+ * @retval æ‰§è¡Œç»“æœ
  */
 #if (KEY_USER_DEFINE_PRESS_TIME)
 int8_t BSP_Key_Init(struct BSP_KEY *key, uint8_t id, uint8_t (*KEY_GetState)(void), KEY_LEVEL press_level, uint16_t press_time)
@@ -81,10 +81,10 @@ int8_t BSP_Key_Init(struct BSP_KEY *key, uint8_t id, uint8_t (*KEY_GetState)(voi
 
 
 /**
- * @brief  °´¼üÆôÓÃ
- * @note   Ã¿¸ö°´¼ü³õÊ¼»¯²¢×¢²áºÃÏàÓ¦µÄ°´¼üÊÂ¼ş»Øµ÷º¯Êıºó£¬±ØĞëµ÷ÓÃ±¾º¯Êı²ÅÄÜÊ¹ÓÃ
- * @param[in]  key: °´¼ü¾ä±ú
- * @retval Ö´ĞĞ½á¹û
+ * @brief  æŒ‰é”®å¯ç”¨
+ * @note   æ¯ä¸ªæŒ‰é”®åˆå§‹åŒ–å¹¶æ³¨å†Œå¥½ç›¸åº”çš„æŒ‰é”®äº‹ä»¶å›è°ƒå‡½æ•°åï¼Œå¿…é¡»è°ƒç”¨æœ¬å‡½æ•°æ‰èƒ½ä½¿ç”¨
+ * @param[in]  key: æŒ‰é”®å¥æŸ„
+ * @retval æ‰§è¡Œç»“æœ
  */
 int8_t BSP_Key_Start(struct BSP_KEY *key)
 {
@@ -92,9 +92,9 @@ int8_t BSP_Key_Start(struct BSP_KEY *key)
     
     while (key_index)
     {
-        if (key_index == key)
+        if (key_index == key) {
             return 1;
-
+        }
         key_index = key_index->next;
     }
     
@@ -106,9 +106,9 @@ int8_t BSP_Key_Start(struct BSP_KEY *key)
 
 
 /**
- * @brief  °´¼üÍ£ÓÃ
- * @note   µ±°´¼ü²»ÔÙĞèÒªÊ¹ÓÃÊ±£¬±ã¿Éµ÷ÓÃ±¾º¯Êı
- * @param[in]  key:°´¼ü¾ä±ú 
+ * @brief  æŒ‰é”®åœç”¨
+ * @note   å½“æŒ‰é”®ä¸å†éœ€è¦ä½¿ç”¨æ—¶ï¼Œä¾¿å¯è°ƒç”¨æœ¬å‡½æ•°
+ * @param[in]  key:æŒ‰é”®å¥æŸ„ 
  * @retval None
  */
 void BSP_Key_Stop(struct BSP_KEY *key)
@@ -126,11 +126,11 @@ void BSP_Key_Stop(struct BSP_KEY *key)
                 return;
             }
 
-            if (key->next)
+            if (key->next) {
                 key_last->next = key->next;
-            
-            else
+            } else {
                 key_last->next = NULL;
+            }
         }
         key_last = key_now;
     }
@@ -138,11 +138,11 @@ void BSP_Key_Stop(struct BSP_KEY *key)
     
 
 /**
- * @brief  ×¢²á°´¼üÊÂ¼ş´¥·¢Ê±µÄ»Øµ÷º¯Êı
- * @note   ÈôĞèÒªÊ¹ÓÃ°´¼ü£¬ÔòÖÁÉÙÓ¦¸Ã×¢²áÒ»¸ö°´¼üÊÂ¼şµÄ»Øµ÷º¯Êı
- * @param[in]  key: °´¼ü¾ä±ú
- * @param[in]  event: °´¼üÊÂ¼ş
- * @param[in]  callback: °´¼üÊÂ¼ş»Øµ÷º¯Êı
+ * @brief  æ³¨å†ŒæŒ‰é”®äº‹ä»¶è§¦å‘æ—¶çš„å›è°ƒå‡½æ•°
+ * @note   è‹¥éœ€è¦ä½¿ç”¨æŒ‰é”®ï¼Œåˆ™è‡³å°‘åº”è¯¥æ³¨å†Œä¸€ä¸ªæŒ‰é”®äº‹ä»¶çš„å›è°ƒå‡½æ•°
+ * @param[in]  key: æŒ‰é”®å¥æŸ„
+ * @param[in]  event: æŒ‰é”®äº‹ä»¶
+ * @param[in]  callback: æŒ‰é”®äº‹ä»¶å›è°ƒå‡½æ•°
  * @retval None
  */
 void BSP_Key_Register(struct BSP_KEY *key, KEY_EVENT event, Key_EventCallback callback)
@@ -152,47 +152,51 @@ void BSP_Key_Register(struct BSP_KEY *key, KEY_EVENT event, Key_EventCallback ca
 
 
 /**
- * @brief  °´¼üÒµÎñ´¦Àíº¯Êı
- * @note   ÈôĞèÒªÊ¹ÓÃ°´¼üµÄÈÎºÎ¹¦ÄÜ£¬¶¼ĞèÒªµ÷ÓÃ±¾º¯Êı£¬²¢ÖÜÆÚĞÔµÄÑ­»·Ö´ĞĞ
- * @param[in]  ms: ¸æÖª±¾º¯ÊıÃ¿¸ô¶àÉÙºÁÃë±»Ö´ĞĞ1´Î
+ * @brief  æŒ‰é”®ä¸šåŠ¡å¤„ç†å‡½æ•°
+ * @note   è‹¥éœ€è¦ä½¿ç”¨æŒ‰é”®çš„ä»»ä½•åŠŸèƒ½ï¼Œéƒ½éœ€è¦è°ƒç”¨æœ¬å‡½æ•°ï¼Œå¹¶å‘¨æœŸæ€§çš„å¾ªç¯æ‰§è¡Œ
+ * @param[in]  ms: å‘ŠçŸ¥æœ¬å‡½æ•°æ¯éš”å¤šå°‘æ¯«ç§’è¢«æ‰§è¡Œ1æ¬¡
  * @retval None
  */
 void BSP_Key_Handler(uint8_t ms)
 {
-    uint8_t i = 0;
+    // uint8_t i = 0;
     uint8_t times = 0xFF;
     struct BSP_KEY *key_index = _key_head;
     
-    for (; i < (8 - KEY_CONSECUTIVE_READ_TIME); i++)
-        times >>= 1;
+    // for (; i < (8 - KEY_CONSECUTIVE_READ_TIME); i++)
+    //     times >>= 1;
+
+    times >>= (8 - KEY_CONSECUTIVE_READ_TIME);
     
     for (; key_index; key_index = key_index->next)
     {
-        /* »ñÈ¡°´¼üµçÆ½Öµ */
+        /* è·å–æŒ‰é”®ç”µå¹³å€¼ */
         key_index->continuous_value = (key_index->continuous_value << 1) | key_index->GetState();
             
-        /* »ñÈ¡°´¼ü°´ÏÂ»òµ¯Æğ×´Ì¬ */
+        /* è·å–æŒ‰é”®æŒ‰ä¸‹æˆ–å¼¹èµ·çŠ¶æ€ */
         if ((key_index->continuous_value & times) == 0x00)
         {
-            if (key_index->press_level == KEY_PRESS_LOW)
+            if (key_index->press_level == KEY_PRESS_LOW) {
                 key_index->key_state = KEY_DOWN;
-            else
+            } else {
                 key_index->key_state = KEY_UP;
+            }
         }
         else if((key_index->continuous_value & times) == times) 
         {
-            if (key_index->press_level == KEY_PRESS_HIGH)
+            if (key_index->press_level == KEY_PRESS_HIGH) {
                 key_index->key_state = KEY_DOWN;
-            else
+            } else {
                 key_index->key_state = KEY_UP;
+            }
         }
         
-        /* °´¼ü×´Ì¬»ú */
+        /* æŒ‰é”®çŠ¶æ€æœº */
         switch (key_index->state)
         {
             case 0:
             {
-                if (key_index->key_state == KEY_DOWN)   /* Ê×´Î°´ÏÂ */
+                if (key_index->key_state == KEY_DOWN)   /* é¦–æ¬¡æŒ‰ä¸‹ */
                 {
                     key_index->event = KEY_PRESS;
                     EVENT_CALLBACK( KEY_PRESS );
@@ -202,7 +206,7 @@ void BSP_Key_Handler(uint8_t ms)
             }
             case 1:
             {
-                if (key_index->key_state == KEY_UP)     /* °´ÏÂºó·Å¿ª */
+                if (key_index->key_state == KEY_UP)     /* æŒ‰ä¸‹åæ”¾å¼€ */
                 {
                     key_index->tick = 0;
                 #if (KEY_CLICK_EVENT_WHEN_DBLCLICK) 
@@ -211,14 +215,14 @@ void BSP_Key_Handler(uint8_t ms)
                 #endif
                     key_index->state = 2;
                 }
-                else if (key_index->key_state == KEY_DOWN)   /* »¹´¦ÓÚµÚÒ»´Î°´ÏÂµÄ×´Ì¬ */
+                else if (key_index->key_state == KEY_DOWN)   /* è¿˜å¤„äºç¬¬ä¸€æ¬¡æŒ‰ä¸‹çš„çŠ¶æ€ */
                 {
                     key_index->tick += ms;
                     
                 #if (KEY_USER_DEFINE_PRESS_TIME)
-                    if (key_index->tick >= key_index->press_time)   /* µÚÒ»´Î°´ÏÂÊ±¼äÒÑ³¬¹ı³¤°´´¥·¢Ê±¼ä */
+                    if (key_index->tick >= key_index->press_time)   /* ç¬¬ä¸€æ¬¡æŒ‰ä¸‹æ—¶é—´å·²è¶…è¿‡é•¿æŒ‰è§¦å‘æ—¶é—´ */
                 #else
-                    if (key_index->tick >= KEY_LONG_PRESS_TIME)     /* ³¬Ê±Î´°´ÏÂ */
+                    if (key_index->tick >= KEY_LONG_PRESS_TIME)     /* è¶…æ—¶æœªæŒ‰ä¸‹ */
                 #endif
                     {
                         key_index->tick  = 0;
@@ -229,11 +233,11 @@ void BSP_Key_Handler(uint8_t ms)
                 }
                 break;
             }
-            case 2:     /* ¼ì²âÊÇ·ñË«»÷ */
+            case 2:     /* æ£€æµ‹æ˜¯å¦åŒå‡» */
             {
-                if (key_index->key_state == KEY_DOWN)       /* µ¥»÷ºóÔÙ´Î°´ÏÂ */
+                if (key_index->key_state == KEY_DOWN)       /* å•å‡»åå†æ¬¡æŒ‰ä¸‹ */
                 {
-                    if (KEY_DBLCLICK_PRESS_VALID)           /* µÚ¶ş´Î°´ÏÂÁ¢¼´´¥·¢±êÖ¾ */
+                    if (KEY_DBLCLICK_PRESS_VALID)           /* ç¬¬äºŒæ¬¡æŒ‰ä¸‹ç«‹å³è§¦å‘æ ‡å¿— */
                     {
                         key_index->event = KEY_DBLCLICK;
                         EVENT_CALLBACK( KEY_DBLCLICK );
@@ -241,11 +245,11 @@ void BSP_Key_Handler(uint8_t ms)
                     key_index->tick  = 0;
                     key_index->state = 3;
                 }
-                else if (key_index->key_state == KEY_UP)    /* Î´°´ÏÂ */
+                else if (key_index->key_state == KEY_UP)    /* æœªæŒ‰ä¸‹ */
                 {
                     key_index->tick += ms;
                     
-                    if (key_index->tick >= KEY_DBLCLICK_TIME)   /* µ¥»÷ºó³¬Ê±Î´ÔÙ°´ÏÂ£¬ÊÂ¼ş½áÊø  */
+                    if (key_index->tick >= KEY_DBLCLICK_TIME)   /* å•å‡»åè¶…æ—¶æœªå†æŒ‰ä¸‹ï¼Œäº‹ä»¶ç»“æŸ  */
                     {
                     #if (KEY_CLICK_EVENT_WHEN_DBLCLICK == 0) 
                         key_index->event = KEY_CLICK;
@@ -258,11 +262,11 @@ void BSP_Key_Handler(uint8_t ms)
                 }
                 break;
             }
-            case 3:     /* Ë«»÷ÊÂ¼ş£¬µÚ¶ş´ÎÒÑ°´ÏÂ */
+            case 3:     /* åŒå‡»äº‹ä»¶ï¼Œç¬¬äºŒæ¬¡å·²æŒ‰ä¸‹ */
             {
-                if (key_index->key_state == KEY_UP)         /* µÚ¶ş´ÎÒÑ·Å¿ª°´¼ü */
+                if (key_index->key_state == KEY_UP)         /* ç¬¬äºŒæ¬¡å·²æ”¾å¼€æŒ‰é”® */
                 {
-                    if (KEY_DBLCLICK_PRESS_VALID == 0)      /* µÚ¶ş´Î°´ÏÂ·Å¿ªºó²Å´¥·¢±êÖ¾ */
+                    if (KEY_DBLCLICK_PRESS_VALID == 0)      /* ç¬¬äºŒæ¬¡æŒ‰ä¸‹æ”¾å¼€åæ‰è§¦å‘æ ‡å¿— */
                     {
                         key_index->event = KEY_DBLCLICK;
                         EVENT_CALLBACK( KEY_DBLCLICK );
@@ -273,14 +277,14 @@ void BSP_Key_Handler(uint8_t ms)
                 }
                 break;
             }
-            case 4:     /* ³¤Ê±¼ä°´×Å£¨½øÈë´Ë´¦Ê±³¤°´»Øµ÷ÊÂ¼şÒÑ¾­±»Ö´ĞĞÍê±Ï£© */
+            case 4:     /* é•¿æ—¶é—´æŒ‰ç€ï¼ˆè¿›å…¥æ­¤å¤„æ—¶é•¿æŒ‰å›è°ƒäº‹ä»¶å·²ç»è¢«æ‰§è¡Œå®Œæ¯•ï¼‰ */
             {
-                if (key_index->key_state == KEY_DOWN)       /* ´ËÊ±ÒÀ¾É±»°´×Å */
+                if (key_index->key_state == KEY_DOWN)       /* æ­¤æ—¶ä¾æ—§è¢«æŒ‰ç€ */
                 {
                     key_index->tick += ms;
 
                 #if (KEY_LONG_PRESS_CONTINU_TRIG_TIME)
-                    /* ĞèÒª³¤°´±£³Ö´¥·¢ */
+                    /* éœ€è¦é•¿æŒ‰ä¿æŒè§¦å‘ */
                     if (key_index->tick >= KEY_LONG_PRESS_CONTINU_TRIG_TIME)
                     {
                         key_index->tick  = 0;
@@ -289,7 +293,7 @@ void BSP_Key_Handler(uint8_t ms)
                     }
                 #endif
                 }
-                else if (key_index->key_state == KEY_UP)    /* ÓÃ»§ÒÑ·Å¿ª°´¼ü£¬Á÷³Ì½áÊø */
+                else if (key_index->key_state == KEY_UP)    /* ç”¨æˆ·å·²æ”¾å¼€æŒ‰é”®ï¼Œæµç¨‹ç»“æŸ */
                 {
                     key_index->tick  = 0;
                     key_index->state = 0;
@@ -321,7 +325,7 @@ static uint8_t C_Key_GetState(void)
     return BSP_GPIO_Read(c_key.id);
 }
 
-/* ×éºÏ°´¼ü */
+/* ç»„åˆæŒ‰é”® */
 static uint8_t SC_Key_GetState(void)
 {
     if (BSP_GPIO_Read(s_key.id) || BSP_GPIO_Read(c_key.id))

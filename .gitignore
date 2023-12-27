@@ -23,13 +23,13 @@
 *.lo
 
 # Shared objects (inc. Windows DLLs)
-#*.dll
+*.dll
 *.so
 *.so.*
 *.dylib
 
 # Executables
-#*.exe
+*.exe
 *.out
 *.app
 *.i*86
@@ -51,15 +51,23 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# for moTA
-*.fpk
-
 # for keil
 *.bin
 *.dbgconf
 *.lst
+*.__i
+*.SBR
 *.Administrator
+*.uvguix.*
 *.axf
 *.htm
 *.lnp
-
+*.dep
+*.json
+*.log
+*.fpk
+**/.vscode/
+/Keil_C51/list/
+/Project/MDK-AC6/*.txt
+/Project/MDK-AC6/*.xlsx
+/Project/MDK-AC6/*.csv

@@ -41,26 +41,26 @@
 
 typedef enum
 {
-    TIMER_TYPE_HARDWARE = 0x01,     /* Ó²¼ş timer £¬ÊµÊ±ĞÔ½ÏÇ¿£¬¶¨Ê±¾«¶È½Ï¸ß£¬Õ¼ÓÃÖĞ¶ÏÊ±¼ä */
-    TIMER_TYPE_SOFTWARE,            /* Èí¼ş timer £¬ÊµÊ±ĞÔ½Ï²î£¬¶¨Ê±¾«¶È½Ï²î£¬²»Õ¼ÓÃÖĞ¶ÏÊ±¼ä */
+    TIMER_TYPE_HARDWARE = 0x01,     /* ç¡¬ä»¶ timer ï¼Œå®æ—¶æ€§è¾ƒå¼ºï¼Œå®šæ—¶ç²¾åº¦è¾ƒé«˜ï¼Œå ç”¨ä¸­æ–­æ—¶é—´ */
+    TIMER_TYPE_SOFTWARE,            /* è½¯ä»¶ timer ï¼Œå®æ—¶æ€§è¾ƒå·®ï¼Œå®šæ—¶ç²¾åº¦è¾ƒå·®ï¼Œä¸å ç”¨ä¸­æ–­æ—¶é—´ */
     
 } BSP_TIMER_TYPE;
 
 struct BSP_TIMER
 {
-    void (*Timeout_Callback)(void *user_data);  /* »Øµ÷º¯Êı */
+    void (*Timeout_Callback)(void *user_data);  /* å›è°ƒå‡½æ•° */
 
-    BSP_TIMER_TYPE  type;               /* timer ÀàĞÍ */
+    BSP_TIMER_TYPE  type;               /* timer ç±»å‹ */
     
-    uint8_t  start          :1;         /* ¿ªÆô±êÖ¾Î» */
-    uint8_t  timeout_flag   :1;         /* Ê±¼äµ½´ï±êÖ¾Î» */
+    uint8_t  start          :1;         /* å¼€å¯æ ‡å¿—ä½ */
+    uint8_t  timeout_flag   :1;         /* æ—¶é—´åˆ°è¾¾æ ‡å¿—ä½ */
     uint8_t                 :0;
-    uint16_t period;                    /* ÓÃ»§Ö¸¶¨ timer µÄÖ´ĞĞ´ÎÊı */
-    uint16_t period_temp;               /* Ôİ´æÖ´ĞĞ´ÎÊı */
-    uint32_t timeout;                   /* ĞèÒª¼ÆÊ±µÄÊ±¼ä£¬µ¥Î»Îª ms */
-    uint32_t time_temp;                 /* ÓÃÓÚ¼ÆÊıµÄ±äÁ¿ */
+    uint16_t period;                    /* ç”¨æˆ·æŒ‡å®š timer çš„æ‰§è¡Œæ¬¡æ•° */
+    uint16_t period_temp;               /* æš‚å­˜æ‰§è¡Œæ¬¡æ•° */
+    uint32_t timeout;                   /* éœ€è¦è®¡æ—¶çš„æ—¶é—´ï¼Œå•ä½ä¸º ms */
+    uint32_t time_temp;                 /* ç”¨äºè®¡æ•°çš„å˜é‡ */
 
-    void *user_data;                    /* ÓÃ»§Êı¾İ */
+    void *user_data;                    /* ç”¨æˆ·æ•°æ® */
     
     struct BSP_TIMER  *next;
 };
@@ -75,9 +75,9 @@ void BSP_Timer_Start(struct BSP_TIMER *timer);
 void BSP_Timer_Restart(struct BSP_TIMER *timer);
 void BSP_Timer_Pause(struct BSP_TIMER *timer);
 void BSP_Timer_Detach(struct BSP_TIMER *timer);
-/* ½¨ÒéÔÚÖĞ¶ÏÖĞµ÷ÓÃ£¬ÄÜ±£Ö¤Ê±¼ä¾«¶È£¬µ«ÈÎÎñÖ´ĞĞÊ±¼ä²»ÒË¹ı³¤ */
+/* å»ºè®®åœ¨ä¸­æ–­ä¸­è°ƒç”¨ï¼Œèƒ½ä¿è¯æ—¶é—´ç²¾åº¦ï¼Œä½†ä»»åŠ¡æ‰§è¡Œæ—¶é—´ä¸å®œè¿‡é•¿ */
 void BSP_Timer_Handler(uint8_t ms);
-/* µ±ÓÃ»§Ñ¡ÔñÊ¹ÓÃÈí¼ş¶¨Ê±Æ÷Ê±£¬Ò»¶¨ÒªÑ­»·µ÷ÓÃ¸Ãº¯Êı */
+/* å½“ç”¨æˆ·é€‰æ‹©ä½¿ç”¨è½¯ä»¶å®šæ—¶å™¨æ—¶ï¼Œä¸€å®šè¦å¾ªç¯è°ƒç”¨è¯¥å‡½æ•° */
 void BSP_Timer_SoftTimerTask(void);
 
 #endif
