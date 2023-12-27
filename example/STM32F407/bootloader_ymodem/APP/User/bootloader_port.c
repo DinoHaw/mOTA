@@ -285,7 +285,7 @@ static void _PP_DataPackageProcess(PP_CMD cmd, uint8_t *data, uint16_t data_len)
                 BSP_Printf("file name: %s\r\n", file_name);
                 BSP_Printf("file size: %d\r\n", atol(file_size));
                 Bootloader_SetCommStatus(COMM_STATUS_FILE_INFO, &_fw_sub_pkg_data[0], _fw_sub_pkg_len);
-                break;
+                return;
             }
             
             /* 固件包头，单独处理 */
