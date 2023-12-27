@@ -74,7 +74,7 @@
           </BeforeMake>
           <AfterMake>
             <RunUserProg1>0</RunUserProg1>
-            <RunUserProg2>0</RunUserProg2>
+            <RunUserProg2>1</RunUserProg2>
             <UserProg1Name />
             <UserProg2Name />
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
@@ -432,16 +432,6 @@
               <FilePath>../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c</FilePath>
             </File>
             <File>
-              <FileName>stm32l4xx_hal_i2c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32l4xx_hal_i2c_ex.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32l4xx_hal_rcc.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c</FilePath>
@@ -470,6 +460,16 @@
               <FileName>stm32l4xx_hal_gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32l4xx_hal_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32l4xx_hal_i2c_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c</FilePath>
             </File>
             <File>
               <FileName>stm32l4xx_hal_dma.c</FileName>

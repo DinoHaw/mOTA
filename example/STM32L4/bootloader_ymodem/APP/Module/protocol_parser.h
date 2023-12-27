@@ -38,7 +38,7 @@
 #include "bsp_common.h"
 #include "firmware_manage.h"
 
-/* YModem Э�� */
+/* YModem 协议 */
 #define YMODEM_SOH                  0x01
 #define YMODEM_STX                  0x02
 #define YMODEM_EOT                  0x04
@@ -53,7 +53,7 @@
 #define YMODEM_STX_FRAME_LEN        (YMODEM_FRAME_FIXED_LEN + YMODEM_STX_DATA_LEN)
 #define YMODEM_C                    'C'
 
-/* Э���������󳤶ȶ��壬�����������궨���� app.c ��Ҳʹ�ã���˲������޸ĺ궨�����ƣ����ĺ궨�����ݼ��� */
+/* 协议包数据最大长度定义，因以下两个宏定义在 app.c 中也使用，因此不建议修改宏定义名称，更改宏定义内容即可 */
 #define PP_FIRMWARE_PKG_SIZE        YMODEM_STX_DATA_LEN
 #define PP_MSG_BUFF_SIZE            YMODEM_STX_FRAME_LEN
 
@@ -73,7 +73,7 @@ typedef enum
 #pragma pack(1)
 union HOST_MESSAGE
 {
-    uint8_t raw_data[ PP_MSG_BUFF_SIZE ];      /* ���ݻ���أ����յ�������λ����ԭʼ���� */
+    uint8_t raw_data[ PP_MSG_BUFF_SIZE ];      /* 数据缓存池，接收到来自上位机的原始数据 */
     
     struct
     {
@@ -86,51 +86,51 @@ union HOST_MESSAGE
 #pragma pack()
 
 
-/************ ���� enum struct typedef �ͺ���������ɾ���� enum struct �ڲ����������Э������޸� *************/
+/************ 以下 enum struct typedef 和函数不建议删除， enum struct 内部数据需根据协议进行修改 *************/
 
-/* ָ��ִ�н���Ĺ��ϴ��� */
+/* 指令执行结果的故障代码 */
 typedef enum 
 {
-    PP_ERR_OK                   = 0x00,     /* �޴��� */
-    PP_ERR_UNKOWN_ERR           = 0x01,     /* δ֪���� */
+    PP_ERR_OK                   = 0x00,     /* 无错误 */
+    PP_ERR_UNKOWN_ERR           = 0x01,     /* 未知错误 */
 
-    /* Э����� */
-    PP_ERR_DUPLICATE_FRAME      = 0x02,     /* �ظ�֡ */
-    PP_ERR_OMISSION_FRAME       = 0x03,     /* ��֡����©֡ */
-    PP_ERR_PKT_NUM_ERR          = 0x04,     /* �������кŴ��� */
-    PP_ERR_FRAME_LENGTH_ERR     = 0x05,     /* ֡���ȴ��� */
-    PP_ERR_FRAME_VERIFY_ERR     = 0x06,     /* ֡У����� */
-    PP_ERR_HEADER_ERR           = 0x07,     /* header ���� */
-    PP_ERR_EXE_FLOW_ERR         = 0x08,     /* ִ�����̴���δ��Э�������յ����ݰ� */
+    /* 协议错误 */
+    PP_ERR_DUPLICATE_FRAME      = 0x02,     /* 重复帧 */
+    PP_ERR_OMISSION_FRAME       = 0x03,     /* 跳帧或遗漏帧 */
+    PP_ERR_PKT_NUM_ERR          = 0x04,     /* 正反序列号错误 */
+    PP_ERR_FRAME_LENGTH_ERR     = 0x05,     /* 帧长度错误 */
+    PP_ERR_FRAME_VERIFY_ERR     = 0x06,     /* 帧校验错误 */
+    PP_ERR_HEADER_ERR           = 0x07,     /* header 错误 */
+    PP_ERR_EXE_FLOW_ERR         = 0x08,     /* 执行流程错误，未按协议流程收到数据包 */
 
-    /* ҵ����� */
-    PP_ERR_NO_FACTORY_FIRMWARE,             /* û�пɹ��ָ������Ĺ̼� */
-    PP_ERR_NO_THIS_PART,                    /* �Ҳ����̼���ָ���ķ��� */
-    PP_ERR_READ_IS_EMPTY_ERR,               /* �жϷ����Ƿ�Ϊ��ʱ��ȡ���� */
-    PP_ERR_FIRMWARE_OVERSIZE,               /* �̼���С������������ */
-    PP_ERR_FIRMWARE_HEAD_VERIFY_ERR,        /* �̼���ͷУ����� */
-    PP_ERR_VERIFY_READ_ERR,                 /* У��̼�ʱ��ȡ���� */
-    PP_ERR_RAW_BODY_VERIFY_ERR,             /* Դ�̼�����У����� */
-    PP_ERR_PKG_BODY_VERIFY_ERR,             /* �����Ĺ̼�����У����� */
-    PP_ERR_ERASE_PART_ERR,                  /* ������������ */
-    PP_ERR_WRITE_FIRST_ADDR_ERR,            /* ����д������׵�ַ���� */
-    PP_ERR_JUMP_TO_APP_ERR,                 /* ��ת�� APP ʱ��⵽���� */
-    PP_ERR_READ_FIRMWARE_HEAD_ERR,          /* ��ȡ�̼���ͷ���� */
-    PP_ERR_UPDATE_READ_ERR,                 /* �̼������� APP ����ʱ��ȡ�������� */
-    PP_ERR_UPDATE_VER_READ_ERR,             /* ���¹̼��汾��Ϣʱ��ȡ�������� */
-    PP_ERR_UPDATE_VER_ERASE_ERR,            /* ���¹̼��汾��Ϣʱ������������ */
-    PP_ERR_UPDATE_VER_WRITE_ERR,            /* ���¹̼��汾��Ϣʱд��������� */
-    PP_ERR_WRITE_PART_ERR,                  /* ����д��������� */
-    PP_ERR_FAULT_FIRMWARE,                  /* ����Ĺ̼��� */
-    PP_ERR_CAN_NOT_PLACE_IN_APP,            /* �ӻ������˶��������ʱ����ָ���̼��������� APP ���� */
-    PP_ERR_DOES_NOT_EXIST_DOWNLOAD,         /* ������ download ���� */
-    PP_ERR_DOES_NOT_EXIST_FACTORY,          /* ������ factory ���� */
-    PP_ERR_NO_DECRYPT_COMPONENT,            /* �ӻ�û�н���������޷����� */
-    PP_ERR_DECRYPT_ERR,                     /* �̼�����ʧ�� */
+    /* 业务错误 */
+    PP_ERR_NO_FACTORY_FIRMWARE,             /* 没有可供恢复出厂的固件 */
+    PP_ERR_NO_THIS_PART,                    /* 找不到固件包指定的分区 */
+    PP_ERR_READ_IS_EMPTY_ERR,               /* 判断分区是否为空时读取错误 */
+    PP_ERR_FIRMWARE_OVERSIZE,               /* 固件大小超过分区容量 */
+    PP_ERR_FIRMWARE_HEAD_VERIFY_ERR,        /* 固件包头校验错误 */
+    PP_ERR_VERIFY_READ_ERR,                 /* 校验固件时读取错误 */
+    PP_ERR_RAW_BODY_VERIFY_ERR,             /* 源固件包体校验错误 */
+    PP_ERR_PKG_BODY_VERIFY_ERR,             /* 打包后的固件包体校验错误 */
+    PP_ERR_ERASE_PART_ERR,                  /* 擦除分区错误 */
+    PP_ERR_WRITE_FIRST_ADDR_ERR,            /* 数据写入分区首地址错误 */
+    PP_ERR_JUMP_TO_APP_ERR,                 /* 跳转至 APP 时检测到错误 */
+    PP_ERR_READ_FIRMWARE_HEAD_ERR,          /* 读取固件包头错误 */
+    PP_ERR_UPDATE_READ_ERR,                 /* 固件更新至 APP 分区时读取分区错误 */
+    PP_ERR_UPDATE_VER_READ_ERR,             /* 更新固件版本信息时读取分区错误 */
+    PP_ERR_UPDATE_VER_ERASE_ERR,            /* 更新固件版本信息时擦除分区错误 */
+    PP_ERR_UPDATE_VER_WRITE_ERR,            /* 更新固件版本信息时写入分区错误 */
+    PP_ERR_WRITE_PART_ERR,                  /* 数据写入分区错误 */
+    PP_ERR_FAULT_FIRMWARE,                  /* 错误的固件包 */
+    PP_ERR_CAN_NOT_PLACE_IN_APP,            /* 从机限制了多分区方案时不能指定固件包放置于 APP 分区 */
+    PP_ERR_DOES_NOT_EXIST_DOWNLOAD,         /* 不存在 download 分区 */
+    PP_ERR_DOES_NOT_EXIST_FACTORY,          /* 不存在 factory 分区 */
+    PP_ERR_NO_DECRYPT_COMPONENT,            /* 从机没有解密组件，无法解密 */
+    PP_ERR_DECRYPT_ERR,                     /* 固件解密失败 */
 
 } PP_CMD_ERR_CODE;
 
-/* Э�������ָ�� */
+/* 协议包含的指令 */
 typedef enum  
 {
     PP_CMD_NONE                 = 0x00,
@@ -141,17 +141,17 @@ typedef enum
 
 } PP_CMD;
 
-/* Э��ָ���ִ�н�� */
+/* 协议指令的执行结果 */
 typedef enum 
 {
-    PP_RESULT_OK                = 0x00,     /* ִ�гɹ� */
-    PP_RESULT_PROCESS           = 0x01,     /* ִ���� */
-    PP_RESULT_FAILED            = 0x02,     /* ִ��ʧ�ܣ����� */
-    PP_RESULT_CANCEL            = 0x03,     /* ִ��ʧ�ܣ�ȡ������ */
+    PP_RESULT_OK                = 0x00,     /* 执行成功 */
+    PP_RESULT_PROCESS           = 0x01,     /* 执行中 */
+    PP_RESULT_FAILED            = 0x02,     /* 执行失败，重试 */
+    PP_RESULT_CANCEL            = 0x03,     /* 执行失败，取消传输 */
 
 } PP_CMD_EXE_RESULT;
 
-/* ��Э�������������ѡ�� */
+/* 对协议析构层的配置选项 */
 typedef enum 
 {
     PP_CONFIG_NONE              = 0x00,
@@ -160,7 +160,7 @@ typedef enum
     
 } PP_CONFIG_PARA;
 
-/* ��Ҫ�����������λ�������� */
+/* 需要打包发送至上位机的数据 */
 struct PP_DEV_TX_PKG
 {
     uint8_t response;
@@ -174,7 +174,7 @@ typedef void (*PP_PrepareCallback_t)(PP_CMD cmd, uint8_t *data, uint16_t data_le
 typedef void (*PP_ReplyCallback_t)(PP_CMD cmd, PP_CMD_EXE_RESULT *cmd_exe_result, uint8_t *data, uint16_t *data_len);
 
 
-/* �������� */
+/* 函数定义 */
 void PP_Init(PP_Send_t               Send, 
              PP_HeartbeatCallback_t  HeartbeatCallback,
              PP_PrepareCallback_t    PrepareCallback, 

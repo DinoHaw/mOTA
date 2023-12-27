@@ -29,25 +29,30 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Change Logs:
+ * Version  Date           Author       Notes
+ * v1.0     2022-11-23     Dino         the first version
+ * v1.1     2022-12-04     Dino         Â¢ûÂä† __IS_COMPILER_ARM_COMPILER__
+ * v1.2     2023-12-19     Dino         1. ÂºïÂÖ• perf_counter Â∫ì
  */
 
 #ifndef __INCLUDES_H__
 #define __INCLUDES_H__
 
-/* ≈‰÷√Œƒº˛ */
-#include "user_config.h"
+/* ÈÖçÁΩÆÊñá‰ª∂ */
 #include "app_config.h"
 #include "bsp_config.h"
+#include "bootloader_config.h"
 
-/* ”√ªßø‚ */
+/* Áî®Êà∑Â∫ì */
 #include "main.h"
 
-/* π§æﬂø‚ */
+/* Â∑•ÂÖ∑Â∫ì */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 /* RTOS */
 #if (USING_RTOS_TYPE == RTOS_USING_RTTHREAD)
@@ -62,49 +67,7 @@
 #if (EANBLE_PRINTF_USING_RTT)
 #include "SEGGER_RTT.h"
 #endif
-
-
-//! \note for IAR
-#ifdef __IS_COMPILER_IAR__
-#   undef __IS_COMPILER_IAR__
-#endif
-#if defined(__IAR_SYSTEMS_ICC__)
-#   define __IS_COMPILER_IAR__                 1
-#endif
-
-//! \note for arm compiler 5
-#ifdef __IS_COMPILER_ARM_COMPILER_5__
-#   undef __IS_COMPILER_ARM_COMPILER_5__
-#endif
-#if ((__ARMCC_VERSION >= 5000000) && (__ARMCC_VERSION < 6000000))
-#   define __IS_COMPILER_ARM_COMPILER_5__      1
-#endif
-//! @}
-
-//! \note for arm compiler 6
-#ifdef __IS_COMPILER_ARM_COMPILER_6__
-#   undef __IS_COMPILER_ARM_COMPILER_6__
-#endif
-#if ((__ARMCC_VERSION >= 6000000) && (__ARMCC_VERSION < 7000000))
-#   define __IS_COMPILER_ARM_COMPILER_6__      1
-#endif
-
-#ifdef __IS_COMPILER_LLVM__
-#   undef  __IS_COMPILER_LLVM__
-#endif
-#if defined(__clang__) && !__IS_COMPILER_ARM_COMPILER_6__
-#   define __IS_COMPILER_LLVM__                1
-#else
-//! \note for gcc
-#ifdef __IS_COMPILER_GCC__
-#   undef __IS_COMPILER_GCC__
-#endif
-#if defined(__GNUC__) && !(__IS_COMPILER_ARM_COMPILER_6__ || __IS_COMPILER_LLVM__)
-#   define __IS_COMPILER_GCC__                 1
-#endif
-//! @}
-#endif
-//! @}
+#include "perf_counter.h"
 
 
 #if (ENABLE_ASSERT)
@@ -113,7 +76,6 @@ extern void Assert_Failed(uint8_t *func, uint32_t line);
 #else
 #define ASSERT(expr)            ((void)0U)
 #endif
-
 
 
 #endif

@@ -29,12 +29,12 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.0
+ * Change Logs:
+ * Version  Date           Author       Notes
+ * v1.0     2022-11-23     Dino         the first version
+ * v1.1     2023-12-19     Dino         1. ä¿®å¤å•æ¬¡è§£åŒ…å¤±è´¥è€Œç›´æ¥é€€å‡ºåè®®çš„é—®é¢˜
+ *                                      2. ä¿®å¤ç¬¬ä¸€ä¸ªä¸º STX æ•°æ®åŒ…æ—¶å¯¼è‡´åœå‘å­—ç¬¦ C çš„é—®é¢˜
  */
-
-
-/* TODO: Î´ÊµÏÖµÄ¹¦ÄÜ£º»Ø¸´Ö÷»ú³¬Ê±¼ì²â£¬³¬Ê±ÔòÖØ·¢ÏìÓ¦ */
-
 
 /* Includes ------------------------------------------------------------------*/
 #include "protocol_parser.h"
@@ -44,25 +44,25 @@
 
 
 /* Private variables ---------------------------------------------------------*/
-/* ¸ù¾İĞ­Òé×Ô¶¨ÒåµÄ±äÁ¿ºÍÊı¾İ */
-static uint8_t                  _is_exe_cmd;            /* ÕıÔÚ´¦ÀíÖ÷»úÊı¾İµÄ±êÖ¾Î» */
-static uint8_t                  _enable_recv_cmd;       /* Ê¹ÄÜÊÇ·ñ½ÓÊÕÖ÷»úµÄÖ¸Áî°ü */
-static uint8_t                  *_dev_rx_data;          /* Ğ­Òé½âÎöµÄÊı¾İÀ´Ô´ */
-static uint16_t                 _dev_rx_len;            /* ½ÓÊÕµ½µÄÊı¾İ³¤¶È */
-static uint8_t                  _ymodem_pkt_num;        /* ¼ÇÂ¼ YModem Ğ­ÒéµÄ packet number */
-static YMODEM_EXE_FLOW          _exe_flow;              /* ¼ÇÂ¼Ğ­ÒéµÄÖ´ĞĞÁ÷³Ì */
-static union HOST_MESSAGE       *_host_msg;             /* ½ÓÊÕÖ÷»úÊı¾İ°üµÄ»º´æ³Ø£¬³ÆÎªÖ÷»úÏûÏ¢ */
-static struct PP_DEV_TX_PKG     _dev_tx_pkg;            /* ÓÃÓÚ´æ·ÅÉè±¸ÉÏ·¢Êı¾İ×é°üµÄ²¿·Ö²ÎÊı */
-static struct BSP_TIMER         _timer_send_c;          /* ÓÃÓÚ¶¨Ê±ÏòÖ÷»ú·¢ËÍÊı¾İµÄ¶¨Ê±Æ÷ */
+/* æ ¹æ®åè®®è‡ªå®šä¹‰çš„å˜é‡å’Œæ•°æ® */
+static bool                     _is_exe_cmd;            /* æ­£åœ¨å¤„ç†ä¸»æœºæ•°æ®çš„æ ‡å¿—ä½ */
+static bool                     _is_enable_recv_cmd;    /* ä½¿èƒ½æ˜¯å¦æ¥æ”¶ä¸»æœºçš„æŒ‡ä»¤åŒ… */
+static uint8_t                 *_dev_rx_data;           /* åè®®è§£æçš„æ•°æ®æ¥æº */
+static uint16_t                 _dev_rx_len;            /* æ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦ */
+static uint8_t                  _ymodem_pkt_num;        /* è®°å½• YModem åè®®çš„ packet number */
+static YMODEM_EXE_FLOW          _exe_flow;              /* è®°å½•åè®®çš„æ‰§è¡Œæµç¨‹ */
+static union HOST_MESSAGE      *_host_msg;              /* æ¥æ”¶ä¸»æœºæ•°æ®åŒ…çš„ç¼“å­˜æ± ï¼Œç§°ä¸ºä¸»æœºæ¶ˆæ¯ */
+static struct PP_DEV_TX_PKG     _dev_tx_pkg;            /* ç”¨äºå­˜æ”¾è®¾å¤‡ä¸Šå‘æ•°æ®ç»„åŒ…çš„éƒ¨åˆ†å‚æ•° */
+static struct BSP_TIMER         _timer_send_c;          /* ç”¨äºå®šæ—¶å‘ä¸»æœºå‘é€æ•°æ®çš„å®šæ—¶å™¨ */
 
-/* Ğ­ÒéÎö¹¹²ãµÄ»Øµ÷º¯Êı£¬²»½¨ÒéĞŞ¸Ä */
-static PP_Send_t                _PP_Send;               /* Êı¾İ·¢ËÍ½Ó¿Ú */
-static PP_PrepareCallback_t     _PP_Prepare;            /* ÊÕµ½Ö÷»úÖ¸ÁîÊ±µÄÔ¤±¸´¦Àí½Ó¿Ú */
-static PP_ReplyCallback_t       _PP_GetReplyInfo;       /* ÕıÔÚÖ´ĞĞÖ¸ÁîÊ±ÏìÓ¦Ö÷»ú²éÑ¯Ö´ĞĞ¹ı³ÌºÍ½á¹ûµÄ½Ó¿Ú */
+/* åè®®ææ„å±‚çš„å›è°ƒå‡½æ•°ï¼Œä¸å»ºè®®ä¿®æ”¹ */
+static PP_Send_t                _PP_Send;               /* æ•°æ®å‘é€æ¥å£ */
+static PP_PrepareCallback_t     _PP_Prepare;            /* æ”¶åˆ°ä¸»æœºæŒ‡ä»¤æ—¶çš„é¢„å¤‡å¤„ç†æ¥å£ */
+static PP_ReplyCallback_t       _PP_GetReplyInfo;       /* æ­£åœ¨æ‰§è¡ŒæŒ‡ä»¤æ—¶å“åº”ä¸»æœºæŸ¥è¯¢æ‰§è¡Œè¿‡ç¨‹å’Œç»“æœçš„æ¥å£ */
 
 
 /* Private function prototypes -----------------------------------------------*/
-/* ¸ù¾İĞ­Òé×Ô¶¨ÒåµÄº¯Êı */
+/* æ ¹æ®åè®®è‡ªå®šä¹‰çš„å‡½æ•° */
 static void                 _Host_HeartBeatProcess   (void);
 static void                 _Host_CommandProcess     (void);
 static void                 _Timeout_Handler         (void *user_data);
@@ -72,12 +72,12 @@ static void                 _YModem_Reset            (void);
 
 /* Exported functions ---------------------------------------------------------*/
 /**
- * @brief  Ğ­ÒéÎö¹¹²ãµÄ³õÊ¼»¯
+ * @brief  åè®®ææ„å±‚çš„åˆå§‹åŒ–
  * @note   
- * @param[in]  Send: µ×²ãÊı¾İ·¢ËÍ½Ó¿Ú
- * @param[in]  HeartbeatCallback: ĞÄÌø°üµÄÏìÓ¦½Ó¿Ú
- * @param[in]  PrepareCallback: Ö¸Áî°üµÄ´¦Àí½Ó¿Ú
- * @param[in]  Set_ReplyInfo: ²éÑ¯Ö¸ÁîÖ´ĞĞ½á¹ûµÄ´¦Àí½Ó¿Ú
+ * @param[in]  Send: åº•å±‚æ•°æ®å‘é€æ¥å£
+ * @param[in]  HeartbeatCallback: å¿ƒè·³åŒ…çš„å“åº”æ¥å£
+ * @param[in]  PrepareCallback: æŒ‡ä»¤åŒ…çš„å¤„ç†æ¥å£
+ * @param[in]  Set_ReplyInfo: æŸ¥è¯¢æŒ‡ä»¤æ‰§è¡Œç»“æœçš„å¤„ç†æ¥å£
  * @retval None
  */
 void PP_Init(PP_Send_t               Send, 
@@ -89,38 +89,42 @@ void PP_Init(PP_Send_t               Send,
     _PP_Prepare      = PrepareCallback;
     _PP_GetReplyInfo = Set_ReplyInfo;
     
-    _enable_recv_cmd = 1;
+    _is_enable_recv_cmd = true;
     BSP_Timer_Init( &_timer_send_c, 
                     _Timeout_Handler, 
                     1000, 
                     TIMER_RUN_FOREVER, 
                     TIMER_TYPE_HARDWARE);
     BSP_Timer_Start(&_timer_send_c);
+
+    _YModem_Reset();
 }
 
 
 /**
- * @brief  Ğ­Òé½âÎö´¦Àíº¯Êı
- * @note   ĞèÒªÑ­»·µ÷ÓÃ
+ * @brief  åè®®è§£æå¤„ç†å‡½æ•°
+ * @note   ç¡®ä¿è¢«ä¸»ç¨‹åºå¾ªç¯è°ƒç”¨ï¼Œæ— æ•°æ®æ—¶ä¼ é€’ NULL å’Œ 0 å³å¯
+ * @param[in]  data: æ”¶åˆ°çš„åº•å±‚æ•°æ®
+ * @param[in]  len: æ•°æ®é•¿åº¦
  * @retval PP_CMD_ERR_CODE
  */
 PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
 {
     PP_CMD_ERR_CODE  err_code;
 
-    /* ÓĞÊı¾İ */
-    if (data && len && _enable_recv_cmd)
+    /* æœ‰æ•°æ® */
+    if (data && len && _is_enable_recv_cmd)
     {
-        /* Ôİ´æºÍ¸ñÊ½»¯ */
+        /* æš‚å­˜å’Œæ ¼å¼åŒ– */
         _dev_rx_data = data;
         _dev_rx_len  = len;
         _host_msg    = (union HOST_MESSAGE *)_dev_rx_data;
 
-        /* Ö»ÓĞÊı¾İÖ¡²Å×öÒÔÏÂ´íÎó¼ì²é */
+        /* åªæœ‰æ•°æ®å¸§æ‰åšä»¥ä¸‹é”™è¯¯æ£€æŸ¥ */
         if (_host_msg->pkg.header == YMODEM_SOH
         ||  _host_msg->pkg.header == YMODEM_STX)
         {
-            /* ÅĞ¶ÏĞòÁĞºÅÊÇ·ñ·ûºÏË³Ğò */
+            /* åˆ¤æ–­åºåˆ—å·æ˜¯å¦ç¬¦åˆé¡ºåº */
             if (_host_msg->pkg.pkt_num != _ymodem_pkt_num)
             {
                 if (_host_msg->pkg.pkt_num == (_ymodem_pkt_num - 1))
@@ -136,7 +140,7 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
                 goto __error_exit;
             }
 
-            /* ÅĞ¶ÏÕı·´ĞòÁĞºÅÊÇ·ñÕıÈ· */
+            /* åˆ¤æ–­æ­£ååºåˆ—å·æ˜¯å¦æ­£ç¡® */
             uint8_t pkt_num = ~(_host_msg->pkg.pkt_num);
             if (_host_msg->pkg.not_pkt_num != pkt_num)
             {
@@ -145,7 +149,7 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
                 goto __error_exit;
             }
 
-            /* »ñÈ¡Ğ­ÒéÖ¡ÖĞµÄÊı¾İ×Ö¶Î³¤¶È */
+            /* è·å–åè®®å¸§ä¸­çš„æ•°æ®å­—æ®µé•¿åº¦ */
             uint16_t data_len;
             if (_host_msg->pkg.header == YMODEM_SOH)
                 data_len = YMODEM_SOH_DATA_LEN;
@@ -153,9 +157,9 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
             else if (_host_msg->pkg.header == YMODEM_STX)
                 data_len = YMODEM_STX_DATA_LEN;
 
-            /* Ö¡³¤¶ÈÅĞ¶Ï */
-            /* Ææ¹ÖµÄÊÇ£¬ Xshell ÔÚ·¢ËÍ×îºóÒ»¸ö¿Õ SOH Êı¾İÖ¡Ê±»á¸½¼ÓÁ½¸ö×Ö½ÚµÄ 0x4F £¬Ô­ÒòÎ´Öª¡£
-             * ÎªÁË´¦ÀíÕâ¸öÎÊÌâ£¬±ÜÃâÎóÅĞÎªÊı¾İÖ¡³¤¶ÈÓĞÎó£¬´Ë´¦Ç¶Ì×ÁË¡° ymodem_pkt_num != 0 ¡±µÄÅĞ¶Ï */
+            /* å¸§é•¿åº¦åˆ¤æ–­ */
+            /* å¥‡æ€ªçš„æ˜¯ï¼Œ Xshell åœ¨å‘é€æœ€åä¸€ä¸ªç©º SOH æ•°æ®å¸§æ—¶ä¼šé™„åŠ ä¸¤ä¸ªå­—èŠ‚çš„ 0x4F ï¼ŒåŸå› æœªçŸ¥ã€‚
+             * ä¸ºäº†å¤„ç†è¿™ä¸ªé—®é¢˜ï¼Œé¿å…è¯¯åˆ¤ä¸ºæ•°æ®å¸§é•¿åº¦æœ‰è¯¯ï¼Œæ­¤å¤„åµŒå¥—äº†â€œ ymodem_pkt_num != 0 â€çš„åˆ¤æ–­ */
             if (_ymodem_pkt_num != 0)
             {
                 if (_dev_rx_len != (data_len + YMODEM_FRAME_FIXED_LEN))
@@ -166,7 +170,7 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
                 }
             }
 
-            /* Ğ£ÑéÊı¾İÊÇ·ñÕıÈ· */
+            /* æ ¡éªŒæ•°æ®æ˜¯å¦æ­£ç¡® */
             uint16_t crc16 = crc16_xmodem(_host_msg->pkg.data, data_len);
             uint16_t raw_crc16 = (_host_msg->pkg.data[data_len] << 8) | _host_msg->pkg.data[data_len + 1];
             if (crc16 != raw_crc16)
@@ -177,12 +181,12 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
                 goto __error_exit;
             }
 
-            /* Ö´ĞĞµ½´Ë´¦¼ÇÂ¼ĞòÁĞºÅ¼Ó1 */
+            /* æ‰§è¡Œåˆ°æ­¤å¤„è®°å½•åºåˆ—å·åŠ 1 */
             _ymodem_pkt_num++;
         }
         BSP_Printf("Ymodem recv len: %d (%.2X)\r\n", _dev_rx_len, _host_msg->pkg.header);
 
-        /* ÉèÖÃÁ÷³Ì */
+        /* è®¾ç½®æµç¨‹ */
         if (_Set_ExeFlow((PP_CMD)_host_msg->pkg.header))
         {
             BSP_Printf("error: flow illegal\r\n");
@@ -190,9 +194,9 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
             goto __error_exit;
         }
 
-        /* µ÷ÓÃ Host_CommandProcess ´¦ÀíÊÕµ½µÄÊı¾İ */
-        /* ³ıÁË×îºóÒ»¸ö¿ÕµÄSOHÊı¾İÖ¡£¬ÆäËû¶¼»áÖ´ĞĞ Host_CommandProcess £¬°üÀ¨ EOT CAN */
-        /* ĞèÒª×¢ÒâÊÇ£¬ Host_CommandProcess Ö´ĞĞÍêºóÈÔÎ´»Ø¸´Ö÷»ú£¬»Ø¸´²¿·ÖÓÉ Host_HeartBeatProcess ´¦Àí */
+        /* è°ƒç”¨ Host_CommandProcess å¤„ç†æ”¶åˆ°çš„æ•°æ® */
+        /* é™¤äº†æœ€åä¸€ä¸ªç©ºçš„SOHæ•°æ®å¸§ï¼Œå…¶ä»–éƒ½ä¼šæ‰§è¡Œ Host_CommandProcess ï¼ŒåŒ…æ‹¬ EOT CAN */
+        /* éœ€è¦æ³¨æ„æ˜¯ï¼Œ Host_CommandProcess æ‰§è¡Œå®Œåä»æœªå›å¤ä¸»æœºï¼Œå›å¤éƒ¨åˆ†ç”± Host_HeartBeatProcess å¤„ç† */
         _Host_CommandProcess();
         return PP_ERR_OK;
 
@@ -204,7 +208,7 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
 
     if (_is_exe_cmd)
     {
-        /* Ä£ÄâÖ÷»úµÄĞÄÌø´¦Àí£¬²éÑ¯ÊÇ·ñ¶ÔĞ­Òé°ü´¦ÀíÍê±Ï£¬ÒÔÏòÖ÷»ú»Ø¸´ */
+        /* æ¨¡æ‹Ÿä¸»æœºçš„å¿ƒè·³å¤„ç†ï¼ŒæŸ¥è¯¢æ˜¯å¦å¯¹åè®®åŒ…å¤„ç†å®Œæ¯•ï¼Œä»¥å‘ä¸»æœºå›å¤ */
         _Host_HeartBeatProcess();
     }
     return PP_ERR_OK;
@@ -212,10 +216,10 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
 
 
 /**
- * @brief  ÅäÖÃĞ­ÒéÎö¹¹²ãµÄ²ÎÊı
+ * @brief  é…ç½®åè®®ææ„å±‚çš„å‚æ•°
  * @note   
- * @param[in]  para: ĞèÒª½øĞĞÅäÖÃµÄÑ¡ĞÍ»ò²ÎÊı
- * @param[in]  value: ¶ÔÓ¦µÄÊı¾İ»òÖµ
+ * @param[in]  para: éœ€è¦è¿›è¡Œé…ç½®çš„é€‰å‹æˆ–å‚æ•°
+ * @param[in]  value: å¯¹åº”çš„æ•°æ®æˆ–å€¼
  * @retval None
  */
 void PP_Config(PP_CONFIG_PARA  para, void *value)
@@ -228,8 +232,8 @@ void PP_Config(PP_CONFIG_PARA  para, void *value)
     else if (para == PP_CONFIG_ENABLE_RECV_CMD)
     {
         uint8_t *enable = (uint8_t *)value;
-        _enable_recv_cmd = *enable;
-        if (_enable_recv_cmd == 0)
+        _is_enable_recv_cmd = (bool)*enable;
+        if (_is_enable_recv_cmd == false)
             BSP_Timer_Pause(&_timer_send_c);
     }
 }
@@ -237,23 +241,20 @@ void PP_Config(PP_CONFIG_PARA  para, void *value)
 
 /* Private functions ---------------------------------------------------------*/
 /**
- * @brief  ¶ÔÖ÷»úÏÂ·¢µÄĞÄÌø°üµÄ´¦Àí
- * @note   ¶ÔÖ÷»úÏÂ·¢µÄÊı¾İÖ¡½øĞĞ»Ø¸´£¬ ymodem Ã»ÓĞĞÄÌø°ü£¬´Ë´¦Ö»ÊÇÄ£Äâ
+ * @brief  å¯¹ä¸»æœºä¸‹å‘çš„å¿ƒè·³åŒ…çš„å¤„ç†
+ * @note   å¯¹ä¸»æœºä¸‹å‘çš„æ•°æ®å¸§è¿›è¡Œå›å¤ï¼Œ ymodem æ²¡æœ‰å¿ƒè·³åŒ…ï¼Œæ­¤å¤„åªæ˜¯æ¨¡æ‹Ÿ
  * @retval None
  */
 static void _Host_HeartBeatProcess(void)
 {
     static PP_CMD_EXE_RESULT  result;
 
+    /* è·å–å¤„ç†ç»“æœ */
     _PP_GetReplyInfo((PP_CMD)_host_msg->pkg.header, &result, NULL, NULL);
 
-    if (result == PP_RESULT_OK)
+    if (result == PP_RESULT_FAILED)
     {
-//        _dev_tx_pkg.response = YMODEM_ACK;
-    }
-    else if (result == PP_RESULT_FAILED)
-    {
-        /* ÒòÇ°ÃæÒÑ¾­¼Ó 1 £¬´Ë´¦ÊÇÓÉÓÚ¶ÔÊı¾İ´¦ÀíÓĞÎÊÌâ£¬·ÇĞ­Òé±¾ÉíÎÊÌâ£¬Òò´ËĞèÒª¼õ»Ø */
+        /* å› å‰é¢å·²ç»åŠ  1 ï¼Œæ­¤å¤„æ˜¯ç”±äºå¯¹æ•°æ®å¤„ç†æœ‰é—®é¢˜ï¼Œéåè®®æœ¬èº«é—®é¢˜ï¼Œå› æ­¤éœ€è¦å‡å› */
         _ymodem_pkt_num--;
         _dev_tx_pkg.response = YMODEM_NAK;
     }
@@ -261,17 +262,19 @@ static void _Host_HeartBeatProcess(void)
     {
         _dev_tx_pkg.response = YMODEM_CAN;
     }
-    /* ÒµÎñ²ã»¹ÔÚ´¦ÀíÊı¾İ£¬ÔİÊ±²»»Ø¸´Ö÷»ú */
-    else
+    /* ä¸šåŠ¡å±‚è¿˜åœ¨å¤„ç†æ•°æ®ï¼Œæš‚æ—¶ä¸å›å¤ä¸»æœº */
+    else if (result == PP_RESULT_PROCESS) 
+    {
         return;
+    }
 
-    _is_exe_cmd = 0;
+    _is_exe_cmd = false;
     _PP_Send(&_dev_tx_pkg.response, 1, HAL_MAX_DELAY);
 }
 
 
 /**
- * @brief  ¶ÔÖ÷»úÏÂ·¢Ö¸ÁîµÄ´¦Àí
+ * @brief  å¯¹ä¸»æœºä¸‹å‘æŒ‡ä»¤çš„å¤„ç†
  * @note   
  * @retval None
  */
@@ -279,7 +282,7 @@ static void _Host_CommandProcess(void)
 {
     uint16_t data_len = 0;
 
-    _is_exe_cmd = 1;
+    _is_exe_cmd = true;
 
     if (_host_msg->pkg.header == YMODEM_SOH
     ||  _host_msg->pkg.header == YMODEM_STX)
@@ -290,9 +293,9 @@ static void _Host_CommandProcess(void)
 
 
 /**
- * @brief  ÉèÖÃĞ­ÒéÖ´ĞĞÁ÷³Ì
+ * @brief  è®¾ç½®åè®®æ‰§è¡Œæµç¨‹
  * @note   
- * @param[in]  cmd: Ö÷»úµÄÖ¸Áî
+ * @param[in]  cmd: ä¸»æœºçš„æŒ‡ä»¤
  * @retval PP_CMD_ERR_CODE
  */
 static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
@@ -301,13 +304,13 @@ static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
     {
         case PP_CMD_SOH:
         {
-            /* µÚÒ»¸ö SOH Êı¾İÖ¡ */
+            /* ç¬¬ä¸€ä¸ª SOH æ•°æ®å¸§ */
             if (_exe_flow == YMODEM_FLOW_NONE)
             {
                 _exe_flow = YMODEM_FLOW_START;
                 _dev_tx_pkg.response = YMODEM_ACK;
             }
-            /* ×îºóÒ»¸ö¿ÕµÄ SOH Êı¾İÖ¡ */
+            /* æœ€åä¸€ä¸ªç©ºçš„ SOH æ•°æ®å¸§ */
             else if (_exe_flow == YMODEM_FLOW_SECOND_EOT)
             {
                 BSP_Timer_Pause(&_timer_send_c);
@@ -315,10 +318,10 @@ static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
                 _ymodem_pkt_num = 0;
                 _dev_tx_pkg.response = YMODEM_ACK;
             }
-            /* ÕıÔÚ´«ÊäÊı¾İµÄ SOH Êı¾İÖ¡ */
+            /* æ­£åœ¨ä¼ è¾“æ•°æ®çš„ SOH æ•°æ®å¸§ */
             else
             {
-                /* ÔİÍ£·¢ËÍ×Ö·û¡° C ¡±µÄ¶¨Ê±Æ÷ */
+                /* æš‚åœå‘é€å­—ç¬¦ "C" çš„å®šæ—¶å™¨ */
                 BSP_Timer_Pause(&_timer_send_c);
                 _dev_tx_pkg.response = YMODEM_ACK;
             }
@@ -326,26 +329,30 @@ static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
         }
         case PP_CMD_STX:
         {
-            /* ÒòÎªµÚÒ»¸öÓĞÊı¾İµÄÊı¾İÖ¡¿ÉÄÜÊÇ STX £¬Òò´Ë´Ë´¦ÓĞ±ØÒªÔİÍ£·¢ËÍ×Ö·û¡° C ¡±µÄ¶¨Ê±Æ÷ */
-            BSP_Timer_Pause(&_timer_send_c);
+            /* ç¬¬ä¸€ä¸ªæ˜¯ STX æ•°æ®å¸§ */
+            if (_exe_flow == YMODEM_FLOW_NONE)
+                _exe_flow = YMODEM_FLOW_START;
+            else 
+                BSP_Timer_Pause(&_timer_send_c);
+
             _dev_tx_pkg.response = YMODEM_ACK;
             break;
         }
         case PP_CMD_EOT:
         {
-            /* µÚÒ»¸ö EOT */
+            /* ç¬¬ä¸€ä¸ª EOT */
             if (_exe_flow == YMODEM_FLOW_START)
             {
                 _exe_flow = YMODEM_FLOW_FIRST_EOT;
                 _dev_tx_pkg.response = YMODEM_NAK;
             }
-            /* µÚ¶ş¸ö EOT */
+            /* ç¬¬äºŒä¸ª EOT */
             else if (_exe_flow == YMODEM_FLOW_FIRST_EOT)
             {
                 _exe_flow = YMODEM_FLOW_SECOND_EOT;
                 _ymodem_pkt_num = 0;
                 _dev_tx_pkg.response = YMODEM_ACK;
-                /* ·¢Íê ACK ĞèÒª¼ÌĞø·¢¡° C ¡± */
+                /* å‘å®Œ ACK éœ€è¦ç»§ç»­å‘ "C" */
                 BSP_Timer_Restart(&_timer_send_c);
             }
             else
@@ -366,23 +373,23 @@ static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
 
 
 /**
- * @brief  ¸´Î»Ò»Ğ©È«¾Ö±äÁ¿ºÍ±êÖ¾ĞÅÏ¢
+ * @brief  å¤ä½ä¸€äº›å…¨å±€å˜é‡å’Œæ ‡å¿—ä¿¡æ¯
  * @note   
  * @retval None
  */
 static void _YModem_Reset(void)
 {
-    _is_exe_cmd = 0;
-    _enable_recv_cmd = 1;        /* Ê¹ÄÜÊÇ·ñ½ÓÊÕÖ÷»úµÄÖ¸Áî°ü */
-    _ymodem_pkt_num = 0;
-    _exe_flow = YMODEM_FLOW_NONE;
+    _is_exe_cmd         = false;
+    _is_enable_recv_cmd = true;     /* ä½¿èƒ½æ¥æ”¶ä¸»æœºçš„æŒ‡ä»¤åŒ… */
+    _ymodem_pkt_num     = 0;
+    _exe_flow           = YMODEM_FLOW_NONE;
 }
 
 
 /**
- * @brief  ¶¨Ê±Æ÷³¬Ê±»Øµ÷º¯Êı
+ * @brief  å®šæ—¶å™¨è¶…æ—¶å›è°ƒå‡½æ•°
  * @note   
- * @param[in]  user_data: ÓÃ»§Êı¾İ
+ * @param[in]  user_data: ç”¨æˆ·æ•°æ®
  * @retval None
  */
 static void _Timeout_Handler(void *user_data)

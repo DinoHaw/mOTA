@@ -33,7 +33,7 @@
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
- * 2022-12-04     Dino         Ôö¼Ó¶ÏÖ¡¼ì²â
+ * 2022-12-04     Dino         å¢åŠ æ–­å¸§æ£€æµ‹
  */
 
 /* Includes ------------------------------------------------------------------*/
@@ -42,7 +42,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 #if (DT_ENABLE_BROKEN_FRAME_DETECT)
-static uint8_t _timeout_flag;
+static bool _is_timeout;
 static struct BSP_TIMER _timer_frame_detect;
 
 
@@ -53,9 +53,9 @@ static void _Timeout_FrameDetect(void *user_data);
 
 /* Exported functions ---------------------------------------------------------*/
 /**
- * @brief  µ×²ãÊı¾İ³õÊ¼»¯½Ó¿Ú
+ * @brief  åº•å±‚æ•°æ®åˆå§‹åŒ–æ¥å£
  * @note   
- * @param[in]  xfer: Êı¾İ½Ó¿Ú¶ÔÏó
+ * @param[in]  xfer: æ•°æ®æ¥å£å¯¹è±¡
  * @retval None
  */
 void DT_Port_Init(struct DATA_TRANSFER *xfer)
@@ -78,11 +78,11 @@ void DT_Port_Init(struct DATA_TRANSFER *xfer)
 
 
 /**
- * @brief  µ×²ãÊı¾İ·¢ËÍ½Ó¿Ú
+ * @brief  åº•å±‚æ•°æ®å‘é€æ¥å£
  * @note   
- * @param[in]  xfer: Êı¾İ½Ó¿Ú¶ÔÏó
- * @param[in]  data: Òª·¢ËÍµÄÊı¾İ
- * @param[in]  len: Òª·¢ËÍµÄÊı¾İ³¤¶È£¬µ¥Î» byte
+ * @param[in]  xfer: æ•°æ®æ¥å£å¯¹è±¡
+ * @param[in]  data: è¦å‘é€çš„æ•°æ®
+ * @param[in]  len: è¦å‘é€çš„æ•°æ®é•¿åº¦ï¼Œå•ä½ byte
  * @retval None
  */
 inline void DT_Port_SendData(struct DATA_TRANSFER *xfer, uint8_t *data, uint32_t len)
@@ -92,17 +92,17 @@ inline void DT_Port_SendData(struct DATA_TRANSFER *xfer, uint8_t *data, uint32_t
 
 
 /**
- * @brief  µ×²ãÊı¾İ²éÑ¯ÊÇ·ñ½ÓÊÕµ½Ò»Ö¡Êı¾İµÄ½Ó¿Ú
+ * @brief  åº•å±‚æ•°æ®æŸ¥è¯¢æ˜¯å¦æ¥æ”¶åˆ°ä¸€å¸§æ•°æ®çš„æ¥å£
  * @note   
- * @param[in]  xfer: Êı¾İ½Ó¿Ú¶ÔÏó
- * @retval ²é¿´ BSP_UART_IsFrameEnd
+ * @param[in]  xfer: æ•°æ®æ¥å£å¯¹è±¡
+ * @retval æŸ¥çœ‹ BSP_UART_IsFrameEnd
  */
 inline uint8_t DT_Port_IsRecvData(struct DATA_TRANSFER *xfer)
 {
 #if (DT_ENABLE_BROKEN_FRAME_DETECT)
-    if (_timeout_flag)
+    if (_is_timeout)
     {
-        _timeout_flag = 0;
+        _is_timeout = false;
         return BSP_UART_ERR_OK;
     }
     else if (BSP_UART_IsFrameEnd((BSP_UART_ID)xfer->if_id) == BSP_UART_ERR_OK)
@@ -120,9 +120,9 @@ inline uint8_t DT_Port_IsRecvData(struct DATA_TRANSFER *xfer)
 
 
 /**
- * @brief  µ×²ãÊı¾İ»º´æÇåÁã½Ó¿Ú
+ * @brief  åº•å±‚æ•°æ®ç¼“å­˜æ¸…é›¶æ¥å£
  * @note   
- * @param[in]  xfer: Êı¾İ½Ó¿Ú¶ÔÏó
+ * @param[in]  xfer: æ•°æ®æ¥å£å¯¹è±¡
  * @retval None
  */
 inline void DT_Port_ClearRecvBuff(struct DATA_TRANSFER *xfer)
@@ -137,14 +137,14 @@ inline void DT_Port_ClearRecvBuff(struct DATA_TRANSFER *xfer)
 /* Private functions ---------------------------------------------------------*/
 #if (DT_ENABLE_BROKEN_FRAME_DETECT)
 /**
- * @brief  Êı¾İÖ¡¼ì²â³¬Ê±´¦Àí»Øµ÷º¯Êı
+ * @brief  æ•°æ®å¸§æ£€æµ‹è¶…æ—¶å¤„ç†å›è°ƒå‡½æ•°
  * @note   
- * @param[in]  user_data: ÓÃ»§Êı¾İ
+ * @param[in]  user_data: ç”¨æˆ·æ•°æ®
  * @retval None
  */
 static void _Timeout_FrameDetect(void *user_data)
 {
-    _timeout_flag = 1;
+    _is_timeout = true;
     BSP_Printf("frame detect clock time up!\r\n");
 }
 #endif

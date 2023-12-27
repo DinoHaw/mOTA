@@ -39,10 +39,10 @@
 
 typedef enum
 {
-    DT_RESULT_RECV_FRAME_DATA           = 0x00,         /* �յ���һ֡���� */
-    DT_RESULT_NO_DATA                   = 0x01,         /* δ�յ����� */
-    DT_RESULT_JUST_RECV_DATA            = 0x02,         /* ���յ�һ֡���ݣ������Ƕ�֡�� */
-    DT_RESULT_WAIT_BROKEN_FRAME_DECTECT = 0x03,         /* �ȴ���֡�ж� */
+    DT_RESULT_RECV_FRAME_DATA           = 0x00,         /* 收到了一帧数据 */
+    DT_RESULT_NO_DATA                   = 0x01,         /* 未收到数据 */
+    DT_RESULT_JUST_RECV_DATA            = 0x02,         /* 刚收到一帧数据（可能是断帧） */
+    DT_RESULT_WAIT_BROKEN_FRAME_DECTECT = 0x03,         /* 等待断帧判断 */
     
 } DT_RECV_DATA_RESULT;
 
