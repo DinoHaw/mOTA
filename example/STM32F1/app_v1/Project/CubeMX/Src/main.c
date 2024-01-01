@@ -6,13 +6,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2023 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -32,6 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -70,8 +70,7 @@ extern void APP_Running(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  
-  
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -158,36 +157,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART1_Init 0 */
-    hdma_usart1_rx.Instance = DMA1_Channel5;
-    hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_usart1_rx.Init.Mode = DMA_CIRCULAR;
-    hdma_usart1_rx.Init.Priority = DMA_PRIORITY_MEDIUM;
-    if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
-    {
-      Error_Handler();
-    }
 
-    __HAL_LINKDMA(&huart1,hdmarx,hdma_usart1_rx);
-
-    /* USART1_TX Init */
-//    hdma_usart1_tx.Instance = DMA1_Channel4;
-//    hdma_usart1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
-//    hdma_usart1_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-//    hdma_usart1_tx.Init.MemInc = DMA_MINC_ENABLE;
-//    hdma_usart1_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-//    hdma_usart1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-//    hdma_usart1_tx.Init.Mode = DMA_NORMAL;
-//    hdma_usart1_tx.Init.Priority = DMA_PRIORITY_LOW;
-//    if (HAL_DMA_Init(&hdma_usart1_tx) != HAL_OK)
-//    {
-//      Error_Handler();
-//    }
-
-//    __HAL_LINKDMA(&huart1,hdmatx,hdma_usart1_tx);
   /* USER CODE END USART1_Init 0 */
 
   /* USER CODE BEGIN USART1_Init 1 */
@@ -235,6 +205,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -257,6 +229,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED0_GPIO_Port, &GPIO_InitStruct);
 
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -271,7 +245,10 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+  __disable_irq();
+  while (1)
+  {
+  }
   /* USER CODE END Error_Handler_Debug */
 }
 
@@ -287,7 +264,7 @@ void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

@@ -123,6 +123,10 @@
 					<Name />
 				</SetRegEntry>
 			</TargetDriverDllRegistry>
+			<Breakpoint />
+			<Tracepoint>
+				<THDelay>0</THDelay>
+			</Tracepoint>
 			<DebugFlag>
 				<trace>0</trace>
 				<periodic>1</periodic>

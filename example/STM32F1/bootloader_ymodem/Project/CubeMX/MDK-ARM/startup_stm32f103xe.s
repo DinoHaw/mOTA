@@ -14,13 +14,12 @@
 ;******************************************************************************
 ;* @attention
 ;*
-;* Copyright (c) 2017 STMicroelectronics.
+;* Copyright (c) 2017-2021 STMicroelectronics.
 ;* All rights reserved.
 ;*
-;* This software component is licensed by ST under BSD 3-Clause license,
-;* the "License"; You may not use this file except in compliance with the
-;* License. You may obtain a copy of the License at:
-;*                        opensource.org/licenses/BSD-3-Clause
+;* This software is licensed under terms that can be found in the LICENSE file
+;* in the root directory of this software component.
+;* If no LICENSE file comes with this software, it is provided AS-IS.
 ;*
 ;******************************************************************************
 
@@ -29,8 +28,6 @@
 ; <h> Stack Configuration
 ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
-
-
 
 Stack_Size		EQU     0x400
 
@@ -53,13 +50,11 @@ __heap_limit
                 THUMB
 
 
-
 ; Vector Table Mapped to Address 0 at Reset
                 AREA    RESET, DATA, READONLY
                 EXPORT  __Vectors
                 EXPORT  __Vectors_End
-                EXPORT  __Vectors_Size 
-                
+                EXPORT  __Vectors_Size
 
 __Vectors       DCD     __initial_sp               ; Top of Stack
                 DCD     Reset_Handler              ; Reset Handler
@@ -69,7 +64,7 @@ __Vectors       DCD     __initial_sp               ; Top of Stack
                 DCD     BusFault_Handler           ; Bus Fault Handler
                 DCD     UsageFault_Handler         ; Usage Fault Handler
                 DCD     0                          ; Reserved
-                DCD     0                          ; APP Version
+                DCD     0                          ; Reserved
                 DCD     0                          ; Reserved
                 DCD     0                          ; Reserved
                 DCD     SVC_Handler                ; SVCall Handler
@@ -243,7 +238,7 @@ Default_Handler PROC
                 EXPORT  USART2_IRQHandler          [WEAK]
                 EXPORT  USART3_IRQHandler          [WEAK]
                 EXPORT  EXTI15_10_IRQHandler       [WEAK]
-                EXPORT  RTC_Alarm_IRQHandler       [WEAK]
+                EXPORT  RTC_Alarm_IRQHandler        [WEAK]
                 EXPORT  USBWakeUp_IRQHandler       [WEAK]
                 EXPORT  TIM8_BRK_IRQHandler        [WEAK]
                 EXPORT  TIM8_UP_IRQHandler         [WEAK]
@@ -357,4 +352,3 @@ __user_initial_stackheap
 
                  END
 
-;************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE*****

@@ -35,11 +35,11 @@
 #ifndef __BSP_CONFIG_H__
 #define __BSP_CONFIG_H__
 
-/* UARTÏà¹Ø */
-#define BSP_PRINTF_BUFF_SIZE                256                 /* BSP_PrintµÄÁÙÊ±»º´æÇø´óÐ¡ */
-#define BSP_PRINTF_HANDLE                   UART(1)             /* ÓÃÓÚÖ´ÐÐBSP_PrintµÄUART¾ä±ú */
+/* UART ç›¸å…³ */
+#define BSP_PRINTF_BUFF_SIZE                256                 /* BSP_Print çš„ä¸´æ—¶ç¼“å­˜åŒºå¤§å° */
+#define BSP_PRINTF_HANDLE                   UART(1)             /* ç”¨äºŽæ‰§è¡Œ BSP_Print çš„ UART å¥æŸ„ */
 
-#define BSP_UART_BUFF_SIZE                  64                 /* UARTÊý¾ÝÒ»¼¶»º´æµÄ´óÐ¡ */
+#define BSP_UART_BUFF_SIZE                  64                 /* UART æ•°æ®ä¸€çº§ç¼“å­˜çš„å¤§å° */
 
 #define BSP_USING_UART1                     1
 #define BSP_USING_UART2                     0

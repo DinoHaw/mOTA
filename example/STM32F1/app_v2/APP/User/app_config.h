@@ -35,32 +35,29 @@
 #ifndef __APP_CONFIG_H__
 #define __APP_CONFIG_H__
 
-/* APP °æ±¾ */
+/* APP ç‰ˆæœ¬ */
 #define APP_VERSION_MAIN                    (0x02U) /*!< [15:8] main version */
 #define APP_VERSION_SUB                     (0x00U) /*!< [7:0] sub version */
 #define APP_VERSION                         ((APP_VERSION_MAIN << 8)    \
                                              |(APP_VERSION_SUB))
 
-/* ¶¨ÒåÏî */
-#define RTOS_USING_NONE                     0                   /* ²»Ê¹ÓÃRTOS */
+/* å®šä¹‰é¡¹ */
+#define RTOS_USING_NONE                     0                   /* ä¸ä½¿ç”¨RTOS */
 #define RTOS_USING_RTTHREAD                 1                   /* RT-Thread */
 #define RTOS_USING_UCOS                     2                   /* uC/OS */
 
 
-/* ÅäÖÃÑ¡Ïî */
-#define ENABLE_ASSERT                       0                   /* ÊÇ·ñÊ¹ÄÜº¯ÊýÈë¿Ú²ÎÊý¼ì²é */
-#define ENABLE_DEBUG_PRINT                  1                   /* ÊÇ·ñÊ¹ÄÜµ÷ÊÔÐÅÏ¢´òÓ¡ */
-#define EANBLE_PRINTF_USING_RTT             0                   /* BSP_Printº¯ÊýÊÇ·ñÊ¹ÓÃSEGGER RTT×÷ÎªÊä³ö¶Ë¿Ú */
+/* é…ç½®é€‰é¡¹ */
+#define ENABLE_ASSERT                       0                   /* æ˜¯å¦ä½¿èƒ½å‡½æ•°å…¥å£å‚æ•°æ£€æŸ¥ */
+#define ENABLE_DEBUG_PRINT                  1                   /* æ˜¯å¦ä½¿èƒ½è°ƒè¯•ä¿¡æ¯æ‰“å° */
+#define EANBLE_PRINTF_USING_RTT             0                   /* BSP_Printå‡½æ•°æ˜¯å¦ä½¿ç”¨SEGGER RTTä½œä¸ºè¾“å‡ºç«¯å£ */
 
 #define USING_RTOS_TYPE                     RTOS_USING_NONE
-#define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTTµÄ´òÓ¡¶Ë¿Ú */
+#define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTTçš„æ‰“å°ç«¯å£ */
 #define MAX_NAME_LEN                        8
 
 #define LED0_PIN                            GET_PIN(B, 5)
 #define KEY0_PIN                            GET_PIN(E, 4)
 
-#define FIRMWARE_UPDATE_VAR_ADDR            0x20000000          /* ¹Ì¼þ¸üÐÂ±êÖ¾Î»µÄ´æ·ÅµØÖ·£¨Ò»¶¨ÒªºÍ bootloader Ò»ÖÂ£© */
-#define FIRMWARE_UPDATE_MAGIC_WORD          0xA5A5A5A5          /* ¹Ì¼þÐèÒª¸üÐÂµÄÌØÊâ±ê¼Ç£¨Ò»¶¨ÒªºÍ bootloader Ò»ÖÂ£© */
-#define FIRMWARE_RECOVERY_MAGIC_WORD        0x5A5A5A5A          /* ÐèÒª»Ö¸´³ö³§¹Ì¼þµÄÌØÊâ±ê¼Ç£¨Ò»¶¨ÒªºÍ bootloader Ò»ÖÂ£© */
 
 #endif
