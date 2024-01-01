@@ -29,12 +29,12 @@
  * This file is part of mOTA - The Over-The-Air technology component for MCU.
  *
  * Author:          Dino Haw <347341799@qq.com>
- * Version:         v1.0.1
  * Change Logs:
- * Date           Author       Notes
- * 2022-11-23     Dino         the first version
- * 2022-12-04     Dino         1. 增加长按按键恢复出厂固件的选项
- *                             2. 修改中断开启与关闭接口
+ * Version  Date           Author       Notes
+ * v1.0     2022-11-23     Dino         the first version
+ * v1.1     2022-12-04     Dino         1. 增加长按按键恢复出厂固件的选项
+ *                                      2. 修改中断开启与关闭接口
+ * v1.2     2023-12-19     Dino         1. 删除多余的宏
  */
 
 #ifndef __BSP_COMMON_H__
@@ -61,12 +61,6 @@
 
 #define BSP_INT_ENTER()
 #define BSP_INT_EXIT()
-
-#define BSP_INT_EN()                        __enable_irq()
-#define BSP_INT_DIS()                       __disable_irq()
-
-#define BSP_UART_ENABLE_RX(UARTx)           UARTx.Instance->CR1 |= (uint32_t)0x0004
-#define BSP_UART_DISABLE_RX(UARTx)          UARTx.Instance->CR1 &= (~(uint32_t)0x0004)
 
 
 #endif

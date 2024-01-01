@@ -33,7 +33,7 @@
  * Change Logs:
  * Date           Author       Notes
  * 2022-11-23     Dino         the first version
- * 2022-12-04     Dino         Ôö¼Ó¶ÏÖ¡¼ì²â
+ * 2022-12-04     Dino         å¢åŠ æ–­å¸§æ£€æµ‹
  */
 
 #ifndef __DATA_TRANSFER_PORT_H__
@@ -42,10 +42,10 @@
 #include "bsp_common.h"
 #include "data_transfer.h"
 
-/* ÊÇ·ñÊ¹ÄÜ¶ÏÖ¡¼ì²â */
-#define DT_ENABLE_BROKEN_FRAME_DETECT   0
+/* æ˜¯å¦ä½¿èƒ½æ–­å¸§æ£€æµ‹ */
+#define DT_ENABLE_BROKEN_FRAME_DETECT   1
 
-#define BROKEN_FRAME_INTERVAL_TIME      100         /* ¶ÏÖ¡¼ä¸ôÊ±¼äÅĞ¶Ï£¬µ¥Î» ms */
+#define BROKEN_FRAME_INTERVAL_TIME      100         /* æ–­å¸§é—´éš”æ—¶é—´åˆ¤æ–­ï¼Œå•ä½ ms */
 
 void    DT_Port_Init            (struct DATA_TRANSFER *xfer);
 void    DT_Port_SendData        (struct DATA_TRANSFER *xfer, uint8_t *data, uint32_t len);
