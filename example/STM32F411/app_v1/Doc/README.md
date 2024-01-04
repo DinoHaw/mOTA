@@ -1,20 +1,20 @@
-### ËµÃ÷
-±¾¹¤³ÌÊÇÊ¾Àý APP £¬²¢¼ÙÉè¹Ì¼þ°æ±¾ÊÇ v1.0 ¡£¹¤³Ì´úÂë»ùÓÚ STM32F411RET6 Ð¾Æ¬¡£
+### è¯´æ˜Ž
+æœ¬å·¥ç¨‹æ˜¯ç¤ºä¾‹ APP ï¼Œå¹¶å‡è®¾å›ºä»¶ç‰ˆæœ¬æ˜¯ v1.0 ã€‚å·¥ç¨‹ä»£ç åŸºäºŽ STM32F411RET6 èŠ¯ç‰‡ã€‚
 
-### ÊµÏÖµÄ¹¦ÄÜ
-1.  ¿ª»úºó´Ó UART2 ´òÓ¡°æ±¾ÐÅÏ¢
-2.  LED ÒÔ 500ms Î´ÖÜÆÚ½øÐÐÉÁË¸
-3.  ÒÔ 1 ÃëÎªÖÜÆÚ´òÓ¡×Ö·û´® "[x] hello world" (x ÊÇµÝÔöµÄÊý×Ö )
-4.  µ±µ¥»÷À¶É«°´¼üÊ±£¬Ä£ÄâÉÏÎ»»ú·¢ËÍÁË¸üÐÂÖ¸Áî£¬¸´Î»½øÈë bootloader
-5.  µ±Ë«»÷À¶É«°´¼üÊ±£¬Ä£ÄâÐèÒª½øÐÐ»Ö¸´³ö³§¹Ì¼þµÄ³¡¾°£¬¸´Î»½øÈë bootloader
+### å®žçŽ°çš„åŠŸèƒ½
+1.  å¼€æœºåŽä»Ž UART2 æ‰“å°ç‰ˆæœ¬ä¿¡æ¯
+2.  LED ä»¥ 500ms æœªå‘¨æœŸè¿›è¡Œé—ªçƒ
+3.  ä»¥ 1 ç§’ä¸ºå‘¨æœŸæ‰“å°å­—ç¬¦ä¸² "[x] app v1.0" (x æ˜¯é€’å¢žçš„æ•°å­— )
+4.  å½“å•å‡»è“è‰²æŒ‰é”®æ—¶ï¼Œæ¨¡æ‹Ÿä¸Šä½æœºå‘é€äº†æ›´æ–°æŒ‡ä»¤ï¼Œå¤ä½è¿›å…¥ bootloader
+5.  å½“åŒå‡»è“è‰²æŒ‰é”®æ—¶ï¼Œæ¨¡æ‹Ÿéœ€è¦è¿›è¡Œæ¢å¤å‡ºåŽ‚å›ºä»¶çš„åœºæ™¯ï¼Œå¤ä½è¿›å…¥ bootloader
 
-### Ö÷ÒªÊ¹ÓÃµÄÍâÉè
-1.  GPIO £¨ÓÃÓÚ LED µÄÉÁË¸£¬Ö¸Ê¾ app ÊÇ·ñÕý³£ÔËÐÐ£¬ÒÔ¼°°´¼üµÄ¼ì²â£©
-2.  Timer £¨ÓÃÓÚÖ´ÐÐ LED µÄÉÁË¸£©
-3.  UART £¨´òÓ¡Êý¾Ý£©
+### ä¸»è¦ä½¿ç”¨çš„å¤–è®¾
+1.  GPIO ï¼ˆç”¨äºŽ LED çš„é—ªçƒï¼ŒæŒ‡ç¤º app æ˜¯å¦æ­£å¸¸è¿è¡Œï¼Œä»¥åŠæŒ‰é”®çš„æ£€æµ‹ï¼‰
+2.  Timer ï¼ˆç”¨äºŽæ‰§è¡Œ LED çš„é—ªçƒï¼‰
+3.  UART ï¼ˆæ‰“å°æ•°æ®ï¼‰
 
-### GPIO ¹¦ÄÜ
-| GPIO | ¹¦ÄÜ     |
+### GPIO åŠŸèƒ½
+| GPIO | åŠŸèƒ½     |
 |------|----------|
 | PA2  | UART2_TX |
 | PA3  | UART2_RX |

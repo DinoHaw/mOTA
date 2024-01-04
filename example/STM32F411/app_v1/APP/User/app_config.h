@@ -35,71 +35,30 @@
 #ifndef __APP_CONFIG_H__
 #define __APP_CONFIG_H__
 
-/* APP °æ±¾ */
+/* APP ç‰ˆæœ¬ */
 #define APP_VERSION_MAIN                    (0x01U) /*!< [15:8] main version */
 #define APP_VERSION_SUB                     (0x00U) /*!< [7:0] sub version */
 #define APP_VERSION                         ((APP_VERSION_MAIN << 8)    \
                                              |(APP_VERSION_SUB))
 
-/* ¶¨ÒåÏî */
-#define RTOS_USING_NONE                     0                   /* ²»Ê¹ÓÃRTOS */
+/* å®šä¹‰é¡¹ */
+#define RTOS_USING_NONE                     0                   /* ä¸ä½¿ç”¨RTOS */
 #define RTOS_USING_RTTHREAD                 1                   /* RT-Thread */
 #define RTOS_USING_UCOS                     2                   /* uC/OS */
 
 
-/* ÅäÖÃÑ¡Ïî */
-#define ENABLE_ASSERT                       0                   /* ÊÇ·ñÊ¹ÄÜº¯ÊýÈë¿Ú²ÎÊý¼ì²é */
-#define ENABLE_DEBUG_PRINT                  1                   /* ÊÇ·ñÊ¹ÄÜµ÷ÊÔÐÅÏ¢´òÓ¡ */
-#define EANBLE_PRINTF_USING_RTT             0                   /* BSP_Printº¯ÊýÊÇ·ñÊ¹ÓÃSEGGER RTT×÷ÎªÊä³ö¶Ë¿Ú */
+/* é…ç½®é€‰é¡¹ */
+#define ENABLE_ASSERT                       0                   /* æ˜¯å¦ä½¿èƒ½å‡½æ•°å…¥å£å‚æ•°æ£€æŸ¥ */
+#define ENABLE_DEBUG_PRINT                  1                   /* æ˜¯å¦ä½¿èƒ½è°ƒè¯•ä¿¡æ¯æ‰“å° */
+#define EANBLE_PRINTF_USING_RTT             0                   /* BSP_Printå‡½æ•°æ˜¯å¦ä½¿ç”¨SEGGER RTTä½œä¸ºè¾“å‡ºç«¯å£ */
 
 #define USING_RTOS_TYPE                     RTOS_USING_NONE
-#define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTTµÄ´òÓ¡¶Ë¿Ú */
+#define SEGGER_RTT_PRINTF_TERMINAL          0                   /* SEGGER RTTçš„æ‰“å°ç«¯å£ */
 #define MAX_NAME_LEN                        8
 
 #define G_LED_PIN                           GET_PIN(A, 5)
 
 #define KEY0_PIN                            GET_PIN(C, 13)
-
-
-/*************************************** ÒÔÏÂ²»½¨ÒéÐÞ¸Ä ***************************************/
-/* USING_PART_PROJECT */
-#define ONE_PART_PROJECT                    0
-#define DOUBLE_PART_PROJECT                 1
-#define TRIPLE_PART_PROJECT                 2
-
-/* USING_IS_NEED_UPDATE_PROJECT */
-#define USING_HOST_CMD_UPDATE               0
-#define USING_APP_SET_FLAG_UPDATE           1
-
-/* FACTORY_NO_FIRMWARE_SOLUTION */
-#define JUMP_TO_APP                         0
-#define WAIT_FOR_NEW_FIRMWARE               1
-
-/* USING_AUTO_UPDATE_PROJECT */
-#define DO_NOT_AUTO_UPDATE                  0
-#define ERASE_DOWNLOAD_PART_PROJECT         1
-#define MODIFY_DOWNLOAD_PART_PROJECT        2
-#define VERSION_WRITE_TO_APP                3
-
-/* USING_APP_SAFETY_CHECK_PROJECT */
-#define DO_NOT_CHECK                        0
-#define CHECK_UNLESS_EMPTY                  1
-#define AUTO_UPDATE_APP                     2
-#define DO_NOT_DO_ANYTHING                  3
-
-/* DOWNLOAD_PART_LOCATION */
-/* FACTORY_PART_LOCATION */
-#define STORE_IN_ONCHIP_FLASH               0
-#define STORE_IN_SPI_FLASH                  1
-
-#define APP_PART_NAME                       "app"
-#define DOWNLOAD_PART_NAME                  "download"
-#define FACTORY_PART_NAME                   "factory"
-
-#define ONCHIP_FLASH_END_ADDRESS            ((uint32_t)(FLASH_BASE + ONCHIP_FLASH_SIZE))            /* Æ¬ÄÚflashÄ©µØÖ· */
-#define APP_ADDRESS                         ((uint32_t)(FLASH_BASE + BOOTLOADER_SIZE))              /* APP·ÖÇøÆðÊ¼µØÖ· */
-#define DOWNLOAD_ADDRESS                    ((uint32_t)(APP_ADDRESS + APP_PART_SIZE))               /* download·ÖÇøÆðÊ¼µØÖ· */
-#define FACTORY_ADDRESS                     ((uint32_t)(DOWNLOAD_ADDRESS + DOWNLOAD_PART_SIZE))     /* factory·ÖÇøÆðÊ¼µØÖ· */
 
 
 #endif

@@ -1,2 +1,2 @@
-# ËµÃ÷
-±¾°¸Àý»ùÓÚ ST ¹Ù·½µÄ NUCLEO-F411RE ÆÀ¹À°å£¬Ö÷Ð¾Æ¬ÊÇ STM32F411RET6 
+# è¯´æ˜Ž
+æœ¬æ¡ˆä¾‹åŸºäºŽ ST å®˜æ–¹çš„ NUCLEO-F411RE è¯„ä¼°æ¿ï¼Œä¸»èŠ¯ç‰‡æ˜¯ STM32F411RET6 

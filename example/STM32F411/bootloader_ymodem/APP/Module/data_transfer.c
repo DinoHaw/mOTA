@@ -37,19 +37,19 @@
 #include "data_transfer_port.h"
 
 
-/* Êı¾İ´«Êä²ã: ¸ºÔğµ×²ãÊı¾İµÄÊÕ·¢£¬¶ÔÉÏ²ãÌá¹©³õÊ¼»¯¡¢·¢ËÍ¡¢½ÓÊÕ¡¢ÊÇ·ñ½ÓÊÕµ½ÁËÒ»Ö¡Êı¾İµÄ½Ó¿Ú */
-/* ÉÏ²ãĞèÖ¸¶¨½ÓÊÕÊı¾İÓÃµÄ»º³åÇø¡¢»º³åÇø´óĞ¡¡¢ÓÃÓÚÖ¸Ê¾»º³åÇøµ±Ç°½ÓÊÕµ½Êı¾İµÄ±äÁ¿ */
+/* æ•°æ®ä¼ è¾“å±‚: è´Ÿè´£åº•å±‚æ•°æ®çš„æ”¶å‘ï¼Œå¯¹ä¸Šå±‚æä¾›åˆå§‹åŒ–ã€å‘é€ã€æ¥æ”¶ã€æ˜¯å¦æ¥æ”¶åˆ°äº†ä¸€å¸§æ•°æ®çš„æ¥å£ */
+/* ä¸Šå±‚éœ€æŒ‡å®šæ¥æ”¶æ•°æ®ç”¨çš„ç¼“å†²åŒºã€ç¼“å†²åŒºå¤§å°ã€ç”¨äºæŒ‡ç¤ºç¼“å†²åŒºå½“å‰æ¥æ”¶åˆ°æ•°æ®çš„å˜é‡ */
 
 
 /* Exported functions ---------------------------------------------------------*/
 /**
- * @brief  Êı¾İ´«Êä²ã³õÊ¼»¯
+ * @brief  æ•°æ®ä¼ è¾“å±‚åˆå§‹åŒ–
  * @note   
- * @param[in]  xfer: ´«Êä¿ØÖÆ¿é¶ÔÏó
- * @param[in]  if_id: ´«Êä½Ó¿Ú ID
- * @param[in]  buff: ÓÃÓÚ½ÓÊÕÊı¾İµÄ»º³å³Ø£¬µ¥Î» byte
- * @param[in]  len: Ö¸Ê¾½ÓÊÕµ½µÄÊı¾İ³¤¶È£¬µ¥Î» byte
- * @param[in]  buff_size: Êı¾İ³Ø×î´óÈİÁ¿£¬µ¥Î» byte
+ * @param[in]  xfer: ä¼ è¾“æ§åˆ¶å—å¯¹è±¡
+ * @param[in]  if_id: ä¼ è¾“æ¥å£ ID
+ * @param[in]  buff: ç”¨äºæ¥æ”¶æ•°æ®çš„ç¼“å†²æ± ï¼Œå•ä½ byte
+ * @param[in]  len: æŒ‡ç¤ºæ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦ï¼Œå•ä½ byte
+ * @param[in]  buff_size: æ•°æ®æ± æœ€å¤§å®¹é‡ï¼Œå•ä½ byte
  * @retval None
  */
 void DT_Init(struct DATA_TRANSFER *xfer, 
@@ -70,11 +70,11 @@ void DT_Init(struct DATA_TRANSFER *xfer,
 
 
 /**
- * @brief  Êı¾İ·¢ËÍ½Ó¿Ú
+ * @brief  æ•°æ®å‘é€æ¥å£
  * @note   
- * @param[in]  xfer: ´«Êä¿ØÖÆ¿é¶ÔÏó
- * @param[in]  data: Òª·¢ËÍµÄÊı¾İ
- * @param[in]  len: Òª·¢ËÍµÄÊı¾İ³¤¶È£¬µ¥Î» byte
+ * @param[in]  xfer: ä¼ è¾“æ§åˆ¶å—å¯¹è±¡
+ * @param[in]  data: è¦å‘é€çš„æ•°æ®
+ * @param[in]  len: è¦å‘é€çš„æ•°æ®é•¿åº¦ï¼Œå•ä½ byte
  * @retval None
  */
 void DT_Send(struct DATA_TRANSFER *xfer, uint8_t *data, uint32_t len)
@@ -84,9 +84,9 @@ void DT_Send(struct DATA_TRANSFER *xfer, uint8_t *data, uint32_t len)
 
 
 /**
- * @brief  ¼ì²âÊÇ·ñ½ÓÊÕµ½Ò»Ö¡Êı¾İµÄÂÖÑ¯½Ó¿Ú
+ * @brief  æ£€æµ‹æ˜¯å¦æ¥æ”¶åˆ°ä¸€å¸§æ•°æ®çš„è½®è¯¢æ¥å£
  * @note   
- * @param[in]  xfer: ´«Êä¿ØÖÆ¿é¶ÔÏó
+ * @param[in]  xfer: ä¼ è¾“æ§åˆ¶å—å¯¹è±¡
  * @retval DT_RECV_DATA_RESULT
  */
 DT_RECV_DATA_RESULT  DT_PollingReceive(struct DATA_TRANSFER *xfer)
@@ -103,9 +103,9 @@ DT_RECV_DATA_RESULT  DT_PollingReceive(struct DATA_TRANSFER *xfer)
 
 
 /**
- * @brief  Çå³ıÓÃÓÚ½ÓÊÕÊı¾İµÄ buff
+ * @brief  æ¸…é™¤ç”¨äºæ¥æ”¶æ•°æ®çš„ buff
  * @note   
- * @param[in]  xfer: ´«Êä¿ØÖÆ¿é¶ÔÏó 
+ * @param[in]  xfer: ä¼ è¾“æ§åˆ¶å—å¯¹è±¡ 
  * @retval None
  */
 inline void DT_ClearBuff(struct DATA_TRANSFER *xfer)
