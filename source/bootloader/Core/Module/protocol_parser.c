@@ -33,6 +33,7 @@
  * Version  Date           Author       Notes
  * v1.0     2022-11-23     Dino         the first version
  * v1.1     2023-12-19     Dino         1. 修复单次解包失败而直接退出协议的问题
+ *                                      2. 修复第一个为 STX 数据包时导致停发字符 C 的问题
  */
 
 /* Includes ------------------------------------------------------------------*/
@@ -194,7 +195,7 @@ PP_CMD_ERR_CODE  PP_Handler(uint8_t *data, uint16_t len)
         }
 
         /* 调用 Host_CommandProcess 处理收到的数据 */
-        /* 除了最后一个空的SOH数据帧，其他都会执行 Host_CommandProcess ，包括 EOT CAN */
+        /* 除了最后一个空的 SOH 数据帧，其他都会执行 Host_CommandProcess ，包括 EOT CAN */
         /* 需要注意是， Host_CommandProcess 执行完后仍未回复主机，回复部分由 Host_HeartBeatProcess 处理 */
         _Host_CommandProcess();
         return PP_ERR_OK;
@@ -248,6 +249,7 @@ static void _Host_HeartBeatProcess(void)
 {
     static PP_CMD_EXE_RESULT  result;
 
+    /* 获取处理结果 */
     _PP_GetReplyInfo((PP_CMD)_host_msg->pkg.header, &result, NULL, NULL);
 
     if (result == PP_RESULT_FAILED)
@@ -319,7 +321,7 @@ static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
             /* 正在传输数据的 SOH 数据帧 */
             else
             {
-                /* 暂停发送字符“ C ”的定时器 */
+                /* 暂停发送字符 "C" 的定时器 */
                 BSP_Timer_Pause(&_timer_send_c);
                 _dev_tx_pkg.response = YMODEM_ACK;
             }
@@ -327,8 +329,12 @@ static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
         }
         case PP_CMD_STX:
         {
-            /* 因为第一个有数据的数据帧可能是 STX ，因此此处有必要暂停发送字符“ C ”的定时器 */
-            BSP_Timer_Pause(&_timer_send_c);
+            /* 第一个是 STX 数据帧 */
+            if (_exe_flow == YMODEM_FLOW_NONE)
+                _exe_flow = YMODEM_FLOW_START;
+            else 
+                BSP_Timer_Pause(&_timer_send_c);
+
             _dev_tx_pkg.response = YMODEM_ACK;
             break;
         }
@@ -346,7 +352,7 @@ static PP_CMD_ERR_CODE  _Set_ExeFlow(PP_CMD  cmd)
                 _exe_flow = YMODEM_FLOW_SECOND_EOT;
                 _ymodem_pkt_num = 0;
                 _dev_tx_pkg.response = YMODEM_ACK;
-                /* 发完 ACK 需要继续发“ C ” */
+                /* 发完 ACK 需要继续发 "C" */
                 BSP_Timer_Restart(&_timer_send_c);
             }
             else

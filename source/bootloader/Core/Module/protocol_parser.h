@@ -175,11 +175,11 @@ typedef void (*PP_ReplyCallback_t)(PP_CMD cmd, PP_CMD_EXE_RESULT *cmd_exe_result
 
 
 /* 函数定义 */
-void PP_Init(PP_Send_t               Send, 
-             PP_HeartbeatCallback_t  HeartbeatCallback,
-             PP_PrepareCallback_t    PrepareCallback, 
-             PP_ReplyCallback_t      Set_ResponseInfo);
-PP_CMD_ERR_CODE     PP_Handler  (uint8_t *data, uint16_t len);
-void                PP_Config   (PP_CONFIG_PARA  para, void *value);
+void            PP_Init     (PP_Send_t               Send, 
+                             PP_HeartbeatCallback_t  HeartbeatCallback,
+                             PP_PrepareCallback_t    PrepareCallback, 
+                             PP_ReplyCallback_t      Set_ResponseInfo);
+PP_CMD_ERR_CODE PP_Handler  (uint8_t *data, uint16_t len);
+void            PP_Config   (PP_CONFIG_PARA  para, void *value);
 
 #endif
