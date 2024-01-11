@@ -145,12 +145,8 @@ void Bootloader_Init(void)
     ASSERT(sizeof(AES256_IV) != 16);
 
 #if (ENABLE_DEBUG_PRINT)
-    uint32_t hal_version = HAL_GetHalVersion();
-
     BSP_Printf("[mOTA] DinoHaw\r\n");
-    BSP_Printf("UID: %.8X %.8X %.8X\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
     BSP_Printf("bootloader Version: V%d.%d\r\n", BOOT_VERSION_MAIN, BOOT_VERSION_SUB);
-    BSP_Printf("HAL Version: V%d.%d.%d.%d\r\n", (hal_version >> 24), (uint8_t)(hal_version >> 16), (uint8_t)(hal_version >> 8), (uint8_t)hal_version);
     #if (IS_ENABLE_SPI_FLASH)
     BSP_Printf("FAL Version: V%s\r\n", FAL_SW_VERSION);
     BSP_Printf("SFUD Version: V%s\r\n", SFUD_SW_VERSION);
