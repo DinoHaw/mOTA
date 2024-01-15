@@ -331,6 +331,20 @@ HAL_NVIC_SystemReset();
 &emsp;
 
 ---
+### 十二、参考例程
+| 案例                 | 贡献者                                    |
+|----------------------|------------------------------------------|
+| [GD32L233_SPI_Flash](https://gitee.com/DinoHaw/mOTA/tree/master/example/GD32L233_SPI_Flash) | [wade任](https://gitee.com/wadeRen?utm_source=poper_profile) |
+| [STM32F1](https://gitee.com/DinoHaw/mOTA/tree/master/example/STM32F1) | [Dino侯巽杰](https://gitee.com/DinoHaw) |
+| [STM32F1_SPI_Flash](https://gitee.com/DinoHaw/mOTA/tree/master/example/STM32F1_SPI_Flash) | [Dino侯巽杰](https://gitee.com/DinoHaw) |
+| [STM32F407](https://gitee.com/DinoHaw/mOTA/tree/master/example/STM32F407) | [Dino侯巽杰](https://gitee.com/DinoHaw) |
+| [STM32F411](https://gitee.com/DinoHaw/mOTA/tree/master/example/STM32F411) | [Dino侯巽杰](https://gitee.com/DinoHaw) |
+| [STM32L4](https://gitee.com/DinoHaw/mOTA/tree/master/example/STM32L4) | [Dino侯巽杰](https://gitee.com/DinoHaw) |
+| [STM32L4_QSPI_Flash](https://gitee.com/DinoHaw/mOTA/tree/master/example/STM32L4_QSPI_Flash) | [Dino侯巽杰](https://gitee.com/DinoHaw) |
+
+&emsp;
+
+---
 ### 说明
 由于从 v2.0 开始改动较大，已与 v1.0 核心代码部分基本互不兼容，因此将 v1.0 封包在发行版中。建议使用最新版本。
 
