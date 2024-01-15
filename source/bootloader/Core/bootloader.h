@@ -173,10 +173,6 @@ void Bootloader_Loop(void);
     #endif
 #endif
 
-#if (APP_PART_SIZE + DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE) > ONCHIP_FLASH_SIZE
-#error "APP_PART_SIZE + DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE size over than ONCHIP_FLASH_SIZE."
-#endif
-
 #if (USING_PART_PROJECT < ONE_PART_PROJECT || USING_PART_PROJECT > TRIPLE_PART_PROJECT)
 #error "The USING_PART_PROJECT option is out of range."
 #endif
@@ -240,6 +236,59 @@ void Bootloader_Loop(void);
     #endif
 #endif
 
-#endif
+#if (USING_PART_PROJECT == ONE_PART_PROJECT)
+    #if (BOOTLOADER_SIZE + APP_PART_SIZE) > ONCHIP_FLASH_SIZE
+    #error "BOOTLOADER_SIZE + APP_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+    #endif
+
+#elif (USING_PART_PROJECT == DOUBLE_PART_PROJECT)
+    #if (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH)
+        #if (BOOTLOADER_SIZE + APP_PART_SIZE) > ONCHIP_FLASH_SIZE
+        #error "BOOTLOADER_SIZE + APP_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+        #endif
+        #if (DOWNLOAD_PART_SIZE) > SPI_FLASH_SIZE
+        #error "DOWNLOAD_PART_SIZE size over than SPI_FLASH_SIZE."
+        #endif
+    #else
+        #if (BOOTLOADER_SIZE + APP_PART_SIZE + DOWNLOAD_PART_SIZE) > ONCHIP_FLASH_SIZE
+        #error "BOOTLOADER_SIZE + APP_PART_SIZE + DOWNLOAD_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+        #endif
+    #endif
+
+#elif (USING_PART_PROJECT == TRIPLE_PART_PROJECT)
+    #if (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH) &&       \
+        (FACTORY_PART_LOCATION  == STORE_IN_SPI_FLASH)
+        #if (BOOTLOADER_SIZE + APP_PART_SIZE) > ONCHIP_FLASH_SIZE
+        #error "BOOTLOADER_SIZE + APP_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+        #endif
+        #if (DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE) > SPI_FLASH_SIZE
+        #error "DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE size over than SPI_FLASH_SIZE."
+        #endif
+
+    #elif (DOWNLOAD_PART_LOCATION == STORE_IN_SPI_FLASH) &&     \
+          (FACTORY_PART_LOCATION  == STORE_IN_ONCHIP_FLASH)
+        #if (BOOTLOADER_SIZE + APP_PART_SIZE + FACTORY_PART_SIZE) > ONCHIP_FLASH_SIZE
+        #error "BOOTLOADER_SIZE + APP_PART_SIZE + FACTORY_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+        #endif
+        #if (DOWNLOAD_PART_SIZE) > SPI_FLASH_SIZE
+        #error "DOWNLOAD_PART_SIZE size over than SPI_FLASH_SIZE."
+        #endif
+
+    #elif (DOWNLOAD_PART_LOCATION == STORE_IN_ONCHIP_FLASH) &&  \
+          (FACTORY_PART_LOCATION  == STORE_IN_SPI_FLASH)
+        #if (BOOTLOADER_SIZE + APP_PART_SIZE + DOWNLOAD_PART_SIZE) > ONCHIP_FLASH_SIZE
+        #error "BOOTLOADER_SIZE + APP_PART_SIZE + DOWNLOAD_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+        #endif
+        #if (FACTORY_PART_SIZE) > SPI_FLASH_SIZE
+        #error "FACTORY_PART_SIZE size over than SPI_FLASH_SIZE."
+        #endif
+    #else
+        #if (BOOTLOADER_SIZE + APP_PART_SIZE + DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE) > ONCHIP_FLASH_SIZE
+        #error "BOOTLOADER_SIZE + APP_PART_SIZE + DOWNLOAD_PART_SIZE + FACTORY_PART_SIZE size over than ONCHIP_FLASH_SIZE."
+        #endif
+    #endif
+#endif  /* #if (USING_PART_PROJECT == ONE_PART_PROJECT) */
+
+#endif  /* __BOOTLOADER_H__ */
 
 
